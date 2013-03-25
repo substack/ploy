@@ -89,7 +89,6 @@ Ploy.prototype.restore = function () {
     }
     
     function restore (repo, ref, commit) {
-        var port = self.bouncer.address().port;
         var dir = path.join(self.ci.repodir, repo);
         var target = {
             repo: repo,
