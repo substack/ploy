@@ -130,7 +130,7 @@ Ploy.prototype.deploy = function (commit) {
             
             var b = self.branches[commit.branch];
             if (b && b.hash === commit.hash) {
-                ploy.remove(commit.branch);
+                self.remove(commit.branch);
                 self.deploy(commit);
             }
         });
