@@ -85,9 +85,8 @@ function getRemote (cb) {
 function getRemotes (cb) {
     var r = argv.r || argv.remote;
     if (/^https?:/.test(r)) {
-        r = r.replace(/_ploy\\b.*/, '/_ploy');
-        if (!/_ploy$/.test(r)) r = r.replace(/\/*$/, '/_ploy');
-        return cb(null, [r]);
+        if (!/\/_ploy\b/.test(r)) r = r.replace(/\/*$/, '/_ploy');
+        return cb(null, [ r.replace(/\/_ploy\b.*/, '/_ploy') ]);
     }
     
     exec('git remote -v', function (err, stdout, stderr) {
