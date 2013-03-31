@@ -2,6 +2,8 @@
 
 git push at this http router and it will host your branches on subdomains
 
+[![build status](https://secure.travis-ci.org/substack/ploy.png)](http://travis-ci.org/substack/ploy)
+
 think [bouncy](https://github.com/substack/bouncy) +
 [cicada](https://github.com/substack/cicada)
 
