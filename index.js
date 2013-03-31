@@ -206,6 +206,8 @@ Ploy.prototype.handle = function (req, res) {
 
 function spawnProcess (commit, env, cb) {
     // `npm start` ignores too many signals
+    var queue = [];
+    
     fs.readFile(path.join(commit.dir, 'package.json'), function (err, src) {
         if (err && err.code === 'ENOENT') {
             src = JSON.stringify({ scripts: { start: 'node server.js' } });
@@ -215,9 +217,24 @@ function spawnProcess (commit, env, cb) {
         try { var pkg = JSON.parse(src) }
         catch (e) { return cb(e) }
         
-        var start = pkg.scripts && pkg.scripts.start || 'node server.js';
+        //var prestart = pkg.scripts && pkg.scripts.prestart;
+        //if (prestart) queue.push(prestart);
         
-        if (!Array.isArray(start)) start = parseQuote(start);
-        cb(null, commit.spawn(start, { env: env }));
+        var start = pkg.scripts && pkg.scripts.start || 'node server.js';
+        queue.push(start);
+        
+        runCommands();
     });
+    
+    function runCommands () {
+        var cmd = queue.shift();
+        if (!Array.isArray(cmd)) cmd = parseQuote(cmd);
+        var ps = commit.spawn(cmd, { env: env });
+        
+        if (queue.length === 0) cb(null, ps)
+        else ps.on('exit', function (code) {
+            if (code !== 0) runCommands()
+            else cb('non-zero exit code running ' + cmd.join(' '))
+        });
+    }
 }
