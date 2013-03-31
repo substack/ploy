@@ -14,9 +14,13 @@ function setup (t) {
 
 function teardown (t) {
     var ps = spawn(__dirname + '/teardown.sh', [], {
-        cwd: __dirname + '/repo'
+        cwd: __dirname
     });
+    ps.stderr.pipe(process.stderr);
     ps.on('exit', t.end.bind(t));
+    t.on('end', function () {
+        setTimeout(process.exit, 500);
+    });
 }
 
 function commit (cb) {
@@ -38,14 +42,13 @@ function push (branch, cb) {
     ps.on('exit', cb);
 }
 
-var tmpDir = path.join('/tmp', Math.random());
+var tmpDir = '/tmp/ploy-test/' + Math.random();
 var server = ploy(tmpDir);
 var port;
-var request = require('request');
 
 test(setup);
 test(function (t) {
-    t.plan(2);
+    t.plan(5);
     server.listen(function () {
         port = server.address().port;
         setTimeout(push0, 2000);
@@ -55,8 +58,8 @@ test(function (t) {
         push('master', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('beep boop\n', 'localhost', deploy);
-            }, 10 * 3000);
+                verify('beep boop\n', 'local', deploy);
+            }, 3000);
         });
     }
     
@@ -64,7 +67,7 @@ test(function (t) {
         push('staging', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('oh hello\n', 'staging');
+                verify('rawr\n', 'staging.local');
             }, 3000);
         });
     }
@@ -72,7 +75,7 @@ test(function (t) {
     function deploy () {
         commit(function (code) {
             t.equal(code, 0);
-            setTimeout(push1, 2000);
+            push1();
         });
     }
     
