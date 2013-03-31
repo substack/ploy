@@ -167,6 +167,10 @@ Ploy.prototype.listen = function () {
     return this.bouncer.listen.apply(this.bouncer, arguments);
 };
 
+Ploy.prototype.address = function () {
+    return this.bouncer.address.apply(this.bouncer, arguments);
+};
+
 Ploy.prototype.handle = function (req, res) {
     if (RegExp('^/_ploy/[^?]+\\.git\\b').test(req.url)) {
         req.url = req.url.replace(RegExp('^/_ploy/'), '/');
