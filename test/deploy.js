@@ -7,7 +7,7 @@ var concat = require('concat-stream');
 
 function setup (t) {
     var ps = spawn(__dirname + '/setup.sh', [], {
-        cwd: __dirname + '/repo'
+        cwd: __dirname
     });
     ps.on('exit', t.end.bind(t));
 }
