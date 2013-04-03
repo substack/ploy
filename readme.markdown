@@ -58,12 +58,6 @@ of the processes it was previously running.
 When you `git push` code at a ploy server, your server will be started and any
 previous server running under the same branch name will be killed.
 
-# methods
-
-``` js
-var ploy = require('ploy')
-```
-
 # usage
 
 ```
@@ -102,6 +96,12 @@ OPTIONS
   is exactly one ploy remote in set up as a git remote, it will be used by
   default.
 
+```
+
+# methods
+
+``` js
+var ploy = require('ploy')
 ```
 
 ## var server = ploy(opts)
