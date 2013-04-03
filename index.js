@@ -217,8 +217,13 @@ function spawnProcess (commit, env, cb) {
         try { var pkg = JSON.parse(src) }
         catch (e) { return cb(e) }
         
-        //var prestart = pkg.scripts && pkg.scripts.prestart;
-        //if (prestart) queue.push(prestart);
+        /*
+        if (scripts) {
+            queue.push.apply(queue, [
+                pkg.scripts.preinstall, pkg.scripts.install
+            ].filter(Boolean));
+        }
+        */
         
         var start = pkg.scripts && pkg.scripts.start || 'node server.js';
         queue.push(start);

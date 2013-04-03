@@ -6,7 +6,7 @@ var hyperquest = require('hyperquest');
 var concat = require('concat-stream');
 
 function setup (t) {
-    var ps = spawn(__dirname + '/setup.sh', [ 'a' ], {
+    var ps = spawn(__dirname + '/setup.sh', [ 'deploy' ], {
         cwd: __dirname
     });
     ps.on('exit', t.end.bind(t));
