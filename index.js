@@ -191,7 +191,11 @@ Ploy.prototype.address = function () {
 };
 
 Ploy.prototype.close = function () {
-    this.bouncer.close();
+    var self = this;
+    self.bouncer.close();
+    Object.keys(self.branches).forEach(function (name) {
+        self.remove(name);
+    });
 };
 
 Ploy.prototype.handle = function (req, res) {

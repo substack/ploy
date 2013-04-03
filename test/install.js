@@ -19,6 +19,7 @@ function teardown (t) {
     ps.stderr.pipe(process.stderr);
     ps.on('exit', t.end.bind(t));
     t.on('end', function () {
+        server.close();
         setTimeout(process.exit, 500);
     });
 }
