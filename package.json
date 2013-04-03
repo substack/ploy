@@ -12,10 +12,12 @@
         "clone": "~0.1.6",
         "shell-quote": "~0.0.1",
         "optimist": "~0.3.5",
-        "hyperquest": "~0.1.0"
+        "quotemeta": "~0.0.0"
     },
     "devDependencies": {
-        "tap": "~0.4.0"
+        "tap": "~0.4.0",
+        "hyperquest": "~0.1.0",
+        "concat-stream": "~0.1.1"
     },
     "scripts": {
         "test": "tap test/*.js"

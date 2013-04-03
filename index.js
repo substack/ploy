@@ -1,5 +1,6 @@
 var bouncy = require('bouncy');
 var cicada = require('cicada');
+var quotemeta = require('quotemeta');
 
 var path = require('path');
 var fs = require('fs');
@@ -23,6 +24,7 @@ function Ploy (opts) {
     var self = this;
     self.branches = {};
     self.delay = opts.delay == undefined ? 3000 : opts.delay;
+    self.regexp = null;
     
     self.ci = cicada(opts);
     self.ci.on('commit', self.deploy.bind(self));
@@ -30,10 +32,18 @@ function Ploy (opts) {
     self.bouncer = bouncy(opts, function (req, res, bounce) {
         var host = (req.headers.host || '').split(':')[0];
         var parts = host.split('.');
-        var subdomain = parts.slice(0,-2).join('.')
+        var subdomain;
+        if (self.regexp) {
+            var m = host.match(self.regexp);
+            if (m) subdomain = m[1];
+        }
+        if (!subdomain) subdomain = parts.slice(0,-2).join('.')
             || parts.slice(0,-1).join('.')
         ;
-        var branch = self.branches[subdomain] ? subdomain : 'master';
+        var branch = (self.branches[subdomain] && subdomain)
+            || (self.branches[subdomain + '.master'] && subdomain + '.master')
+            || 'master'
+        ;
         
         if (RegExp('^/_ploy\\b').test(req.url)) {
             if (opts.auth) {
@@ -134,12 +144,26 @@ Ploy.prototype.deploy = function (commit) {
 Ploy.prototype.add = function (name, rec) {
     if (this.branches[name]) this.remove(name);
     this.branches[name] = rec;
+    this._rescanRegExp();
+};
+
+Ploy.prototype._rescanRegExp = function () {
+    this.regexp = RegExp('^('
+        + Object.keys(this.branches).map(function (key) {
+            return quotemeta(key);
+        })
+        .sort(function (a, b) { return b.length - a.length })
+        .join('|')
+        + ')(?:$|\\.)'
+    );
 };
 
 Ploy.prototype.remove = function (name) {
     var b = this.branches[name];
     if (b) b.process.kill();
     delete this.branches[name];
+    this._rescanRegExp();
+    
     spawn('git', [ 'branch', '-D', name ], {
         cwd: path.join(this.ci.repodir, b.repo)
     });
@@ -155,6 +179,7 @@ Ploy.prototype.move = function (src, dst) {
     if (this.branches[dst]) this.remove(dst);
     this.branches[dst] = this.branches[src];
     delete this.branches[src];
+    this._rescanRegExp();
 };
 
 Ploy.prototype.listen = function () {
