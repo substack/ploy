@@ -126,9 +126,7 @@ Ploy.prototype.deploy = function (commit) {
             clearTimeout(to);
             
             var b = self.branches[ps.host];
-            if (b && b.hash === commit.hash) {
-                self.branches[ps.host].process = ps.respawn();
-            }
+            if (b && b.hash === commit.hash) ps.respawn();
         });
     });
 };
@@ -201,8 +199,6 @@ Ploy.prototype.handle = function (req, res) {
 };
 
 function spawnProcess (commit, env, cb) {
-    // `npm start` ignores too many signals
-    
     fs.readFile(path.join(commit.dir, 'package.json'), function (err, src) {
         if (err && err.code === 'ENOENT') {
             src = JSON.stringify({ scripts: { start: 'node server.js' } });
@@ -212,32 +208,25 @@ function spawnProcess (commit, env, cb) {
         try { var pkg = JSON.parse(src) }
         catch (e) { return cb(e) }
         
-        /*
-        if (scripts) {
-            queue.push.apply(queue, [
-                pkg.scripts.preinstall, pkg.scripts.install
-            ].filter(Boolean));
-        }
-        */
-        
         var start = pkg.scripts && pkg.scripts.start || 'node server.js';
-        if (typeof start === 'object') {
-            // ...
+        if (typeof start === 'string') {
+            start = { 'index': start };
         }
-        else {
+        
+        Object.keys(start).forEach(function (key) {
             var pEnv = clone(env);
             pEnv.PORT = Math.floor(Math.random()*(Math.pow(2,16)-1024)+1024);
-            runCommands(start, pEnv);
-        }
+            var host = (key === 'index' ? '' : key + '.') + commit.branch;
+            runCommands(host, start[key], pEnv);
+        });
     });
     
-    function runCommands (cmd, env, re) {
+    function runCommands (host, cmd, env) {
         if (!Array.isArray(cmd)) cmd = parseQuote(cmd);
         var ps = commit.spawn(cmd, { env: env });
         ps.port = env.PORT;
-        ps.host = commit.branch;
-        ps.respawn = function () { return runCommands(cmd, env) };
+        ps.host = host;
+        ps.respawn = function () { runCommands(host, cmd, env) };
         cb(null, ps);
-        return ps;
     }
 }
