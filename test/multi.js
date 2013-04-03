@@ -24,7 +24,7 @@ function teardown (t) {
 }
 
 function commit (cb) {
-    var ps = spawn(__dirname + '/commit.sh', [], {
+    var ps = spawn(__dirname + '/commit/multi.sh', [], {
         cwd: __dirname + '/repo'
     });
     ps.on('exit', cb);
