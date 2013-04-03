@@ -1,7 +1,8 @@
 #!/bin/bash
+rm -rf repo
 mkdir -p repo
 cd repo
-cp ../source/$1/package.json ../source/$1/server.js .
+cp ../source/$1/*.* .
 git init .
-git add package.json server.js
+git add *.*
 git commit -m'initial files'

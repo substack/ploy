@@ -52,7 +52,7 @@ function pending (n, cb) {
 
 test(setup);
 test(function (t) {
-    t.plan(5);
+    t.plan(7);
     server.listen(function () {
         port = server.address().port;
         setTimeout(push0, 2000);

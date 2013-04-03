@@ -226,6 +226,8 @@ function spawnProcess (commit, env, cb) {
         var ps = commit.spawn(cmd, { env: env });
         ps.port = env.PORT;
         ps.host = host;
+        ps.stdout.pipe(process.stdout, { end: false });
+        ps.stderr.pipe(process.stderr, { end: false });
         ps.respawn = function () { runCommands(host, cmd, env) };
         cb(null, ps);
     }
