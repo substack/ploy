@@ -103,6 +103,9 @@ OPTIONS
 ploy will look at your `package.json`'s `scripts.start` field for how to start
 processes.
 
+Before any services are started, `npm install .` will be run on the deployed
+repo. npm will handle the `preinstall`, `install`, and `postinstall` hooks.
+
 If `scripts.start` is a string, ploy will set `$PORT` for a single process and
 host it accordinly.
 
@@ -126,6 +129,8 @@ at just `domain`. When you push to non-master branches, `domain` will be
 prefaced accordingly to mount hosts at `beep.staging.domain` etc.
 
 Use the special key `"index"` to set a host to resolve for the root subdomain.
+
+Each service start command will be immediately restarted when it crashes.
 
 # methods
 
