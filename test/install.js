@@ -59,7 +59,7 @@ test(function (t) {
         push('master', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('one\ntwo\n', 'local', deploy);
+                verify('one\ntwo\nthree\n', 'local', deploy);
             }, 3000);
         });
     }
@@ -68,7 +68,7 @@ test(function (t) {
         push('staging', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('one\ntwo\n', 'staging.local');
+                verify('one\ntwo\nthree\n', 'staging.local');
             }, 3000);
         });
     }

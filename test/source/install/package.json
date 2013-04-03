@@ -4,6 +4,7 @@
   "scripts": {
     "preinstall": "./pre.sh",
     "install": "./install.sh",
+    "postinstall": "./post.sh",
     "start": "node server.js"
   }
 }
