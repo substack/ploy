@@ -2,7 +2,7 @@
   "name": "ploy-test-repo",
   "version": "0.0.0",
   "scripts": {
-    "pre-install": "./pre.sh",
+    "preinstall": "./pre.sh",
     "install": "./install.sh",
     "start": "node server.js"
   }
