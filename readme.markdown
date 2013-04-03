@@ -98,6 +98,34 @@ OPTIONS
 
 ```
 
+# scripts
+
+ploy will look at your `package.json`'s `scripts.start` field for how to start
+processes.
+
+If `scripts.start` is a string, ploy will set `$PORT` for a single process and
+host it accordinly.
+
+If `scripts.start` is an object, the keys should map subdomains to commands to
+launch servers with. For instance:
+
+``` json
+{
+  "scripts": {
+    "start": {
+      "beep": "node beep.js",
+      "boop": "node boop.js",
+      "index": "node server.js"
+    }
+  }
+}
+```
+
+Will host `beep.js` at `beep.domain`, `boop.js` at `boop.domain` and `server.js`
+at just `domain`.
+
+Use the special key `"index"` to set a host to resolve for the root subdomain.
+
 # methods
 
 ``` js
