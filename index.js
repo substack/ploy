@@ -111,24 +111,23 @@ Ploy.prototype.deploy = function (commit) {
         
         var to = setTimeout(function () {
             // didn't crash in 3 seconds, add to routing table
-            if (self.branches[commit.branch]) {
-                self.remove(commit.branch);
+            if (self.branches[ps.host]) {
+                self.remove(ps.host);
             }
-            self.add(commit.branch, {
+            self.add(ps.host, {
                 port: ps.port,
                 hash: commit.hash,
                 repo: commit.repo,
                 process: ps
             });
-        }, self.branches[commit.branch] ? self.delay : 0);
+        }, self.branches[ps.host] ? self.delay : 0);
         
-        ps.on('exit', function (code) {
+        ps.once('exit', function (code) {
             clearTimeout(to);
             
-            var b = self.branches[commit.branch];
+            var b = self.branches[ps.host];
             if (b && b.hash === commit.hash) {
-                self.remove(commit.branch);
-                self.deploy(commit);
+                self.branches[ps.host].process = ps.respawn();
             }
         });
     });
@@ -203,7 +202,6 @@ Ploy.prototype.handle = function (req, res) {
 
 function spawnProcess (commit, env, cb) {
     // `npm start` ignores too many signals
-    var queue = [];
     
     fs.readFile(path.join(commit.dir, 'package.json'), function (err, src) {
         if (err && err.code === 'ENOENT') {
@@ -227,24 +225,19 @@ function spawnProcess (commit, env, cb) {
             // ...
         }
         else {
-            var port = Math.floor(Math.random() * (Math.pow(2,16)-1024) + 1024);
-            env.PORT = port;
-            queue.push(start);
+            var pEnv = clone(env);
+            pEnv.PORT = Math.floor(Math.random()*(Math.pow(2,16)-1024)+1024);
+            runCommands(start, pEnv);
         }
-        
-        runCommands();
     });
     
-    function runCommands () {
-        var cmd = queue.shift();
+    function runCommands (cmd, env, re) {
         if (!Array.isArray(cmd)) cmd = parseQuote(cmd);
         var ps = commit.spawn(cmd, { env: env });
         ps.port = env.PORT;
-        
-        if (queue.length === 0) cb(null, ps)
-        else ps.on('exit', function (code) {
-            if (code !== 0) runCommands()
-            else cb('non-zero exit code running ' + cmd.join(' '))
-        });
+        ps.host = commit.branch;
+        ps.respawn = function () { return runCommands(cmd, env) };
+        cb(null, ps);
+        return ps;
     }
 }
