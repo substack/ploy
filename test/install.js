@@ -84,7 +84,7 @@ test(function (t) {
         var hq = hyperquest('http://localhost:' + port);
         hq.setHeader('host', host);
         hq.pipe(concat(function (err, body) {
-            t.equal(msg, String(body));
+            t.equal(String(body), msg);
             if (cb) cb();
         }));
     }
