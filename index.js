@@ -106,9 +106,6 @@ Ploy.prototype.deploy = function (commit) {
     var self = this;
     
     var env = clone(process.env);
-    var port = Math.floor(Math.random() * (Math.pow(2,16)-1024) + 1024);
-    env.PORT = port;
-    
     spawnProcess(commit, env, function (err, ps) {
         if (err) return console.error(err)
         
@@ -118,7 +115,7 @@ Ploy.prototype.deploy = function (commit) {
                 self.remove(commit.branch);
             }
             self.add(commit.branch, {
-                port: port,
+                port: ps.port,
                 hash: commit.hash,
                 repo: commit.repo,
                 process: ps
@@ -226,7 +223,14 @@ function spawnProcess (commit, env, cb) {
         */
         
         var start = pkg.scripts && pkg.scripts.start || 'node server.js';
-        queue.push(start);
+        if (typeof start === 'object') {
+            // ...
+        }
+        else {
+            var port = Math.floor(Math.random() * (Math.pow(2,16)-1024) + 1024);
+            env.PORT = port;
+            queue.push(start);
+        }
         
         runCommands();
     });
@@ -235,6 +239,7 @@ function spawnProcess (commit, env, cb) {
         var cmd = queue.shift();
         if (!Array.isArray(cmd)) cmd = parseQuote(cmd);
         var ps = commit.spawn(cmd, { env: env });
+        ps.port = env.PORT;
         
         if (queue.length === 0) cb(null, ps)
         else ps.on('exit', function (code) {
