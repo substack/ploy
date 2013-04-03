@@ -122,7 +122,8 @@ launch servers with. For instance:
 ```
 
 Will host `beep.js` at `beep.domain`, `boop.js` at `boop.domain` and `server.js`
-at just `domain`.
+at just `domain`. When you push to non-master branches, `domain` will be
+prefaced accordingly to mount hosts at `beep.staging.domain` etc.
 
 Use the special key `"index"` to set a host to resolve for the root subdomain.
 
