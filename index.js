@@ -25,6 +25,7 @@ function Ploy (opts) {
     self.branches = {};
     self.delay = opts.delay == undefined ? 3000 : opts.delay;
     self.regexp = null;
+    self.workdir = opts.workdir;
     
     self.ci = cicada(opts);
     self.ci.on('commit', self.deploy.bind(self));
@@ -94,7 +95,19 @@ Ploy.prototype.restore = function () {
         var file = path.join(self.ci.repodir, repo, 'refs', 'heads', ref);
         fs.readFile(file, function (err, src) {
             if (err) return console.error(err);
-            restore(repo, ref, String(src).trim());
+            checkExisting(repo, ref, String(src).trim());
+        });
+    }
+    
+    function checkExisting (repo, ref, hash) {
+        var file = path.join(self.workdir, 'commit.json');
+        fs.readFile(file, function (err, src) {
+            if (err) return restore(repo, ref, hash);
+            try { var commit = JSON.parse(String(src)) }
+            catch (e) { return restore(repo, ref, hash) }
+            
+            commit._skipInstall = true;
+            self.deploy(commit);
         });
     }
     
