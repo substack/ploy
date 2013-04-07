@@ -206,6 +206,7 @@ Ploy.prototype.listen = function () {
         else acc.list.push(arg);
         return acc;
     }, { list: [], opts: {} });
+    if (args.opts.port) args.list.unshift(Number(args.opts.port));
     
     var b = this.createBouncer(args.opts);
     this.bouncers.push(b);

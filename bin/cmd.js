@@ -56,12 +56,24 @@ else if (cmd === 'remove' || cmd === 'rm') {
 else {
     var dir = path.resolve(argv.dir || argv.d || argv._.shift() || '.');
     var authFile = argv.auth || argv.a;
-    var server = ploy({
+    var opts = {
         repodir: path.join(dir, 'repo'),
         workdir: path.join(dir, 'work'),
         auth: authFile && JSON.parse(fs.readFileSync(authFile))
-    });
-    server.listen(argv.port || argv.p || argv._.shift());
+    };
+    
+    var server = ploy(opts);
+    server.listen(argv.port || argv.p || 80);
+    
+    if (argv.ca || argv.pfx) {
+        var sopts = {};
+        if (argv.ca) sopts.ca = fs.readFileSync(argv.ca);
+        if (argv.key) sopts.key = fs.readFileSync(argv.key);
+        if (argv.cert) sopts.cert = fs.readFileSync(argv.cert);
+        if (argv.pfx) sopts.pfx = fs.readFileSync(argv.pfx);
+        sopts.port = argv.sslPort || argv.s || 443;
+        server.listen(sopts);
+    }
 }
 
 function error (err) {
