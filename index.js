@@ -30,7 +30,14 @@ function Ploy (opts) {
     self.ci = cicada(opts);
     self.ci.on('commit', self.deploy.bind(self));
     
-    self.bouncer = bouncy(opts, function (req, res, bounce) {
+    self.bouncers = [];
+    self.auth = opts.auth;
+    self.restore();
+}
+
+Ploy.prototype.createBouncer = function (opts) {
+    var self = this;
+    return bouncy(opts, function (req, res, bounce) {
         var host = (req.headers.host || '').split(':')[0];
         var parts = host.split('.');
         var subdomain;
@@ -47,13 +54,13 @@ function Ploy (opts) {
         ;
         
         if (RegExp('^/_ploy\\b').test(req.url)) {
-            if (opts.auth) {
+            if (self.auth) {
                 var au = req.headers.authorization;
                 var m = /^basic\s+(\S+)/i.exec(au);
                 if (!m) return prohibit('ACCESS DENIED');
                 var s = Buffer(m[1], 'base64').toString().split(':');
                 var user = s[0], token = s[1];
-                if (!opts.auth[user] || opts.auth[user] !== token) {
+                if (!self.auth[user] || self.auth[user] !== token) {
                     return prohibit('ACCESS DENIED');
                 }
             }
@@ -73,9 +80,7 @@ function Ploy (opts) {
             res.end(msg + '\n');
         }
     });
-    
-    self.restore();
-}
+};
 
 Ploy.prototype.restore = function () {
     var self = this;
@@ -196,16 +201,25 @@ Ploy.prototype.move = function (src, dst) {
 };
 
 Ploy.prototype.listen = function () {
-    return this.bouncer.listen.apply(this.bouncer, arguments);
+    var args = [].slice.call(arguments).reduce(function (acc, arg) {
+        if (arg && typeof arg === 'object') acc.opts = arg;
+        else acc.list.push(arg);
+        return acc;
+    }, { list: [], opts: {} });
+    
+    var b = this.createBouncer(args.opts);
+    this.bouncers.push(b);
+    b.listen.apply(b, args.list);
+    return b;
 };
 
 Ploy.prototype.address = function () {
-    return this.bouncer.address.apply(this.bouncer, arguments);
+    return this.bouncers[0].address.apply(this.bouncers[0], arguments);
 };
 
 Ploy.prototype.close = function () {
     var self = this;
-    self.bouncer.close();
+    self.bouncers.forEach(function (b) { b.close() });
     Object.keys(self.branches).forEach(function (name) {
         self.remove(name);
     });
