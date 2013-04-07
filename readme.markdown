@@ -71,6 +71,8 @@ usage:
  
     If AUTHFILE is given, it should be a json file that maps usernames to
     token strings to use for basic auth protection for ploy actions.
+    
+    Type `ploy help ssl` to show ssl options.
  
   ploy ls { -r REMOTE }
  
@@ -84,9 +86,11 @@ usage:
  
     Remove the branch name at NAME, killing any running processes.
  
-  ploy help
+  ploy help [TOPIC]
  
-    Show this message. 
+    Show this message or optionally a TOPIC.
+    
+    Topics: ssl
 
 OPTIONS
 
@@ -157,9 +161,13 @@ If `opts` is a string, it will be used as the basedir for `opts.repodir` and
 The rest of the options will be looked over by bouncy to do things like set up
 an https server or whatever.
 
-## server.listen(port, ...)
+## server.listen(opts, port, host...)
 
-Call `.listen()` on the underlying http or https server.
+Call `.listen()` on the underlying http or https server, passing any `opts`
+object directly through to [bouncy](https://github.com/substack/bouncy).
+
+To host ploy over ssl, set the (`opts.key`, `opts.ca`, and `opts.cert`),
+or set `opts.pfx`.
 
 ## server.add(name, rec)
 
