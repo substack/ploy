@@ -1,0 +1,16 @@
+ssl options:
+
+  Create an https server with these options:
+  
+    --sslPort, -s
+  
+  and
+  
+    --ca=CA_FILE
+    --key=KEY_FILE
+    --cert=CERT_FILE
+  
+  or
+  
+    --pfx=PFX_FILE
+

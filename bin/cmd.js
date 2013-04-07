@@ -10,7 +10,14 @@ var path = require('path');
 
 var cmd = argv._[0];
 if (cmd === 'help' || argv.h || argv.help || process.argv.length <= 2) {
-    fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
+    var h = argv.h || argv.help || argv._[1];
+    var helpFile = typeof h === 'string' ? h : 'usage';
+    
+    var rs = fs.createReadStream(__dirname + '/' + helpFile + '.txt')
+    rs.on('error', function () {
+        console.log('No help found for ' + h);
+    });
+    rs.pipe(process.stdout);
 }
 else if (cmd === 'list' || cmd === 'ls') {
     getRemote(function (err, remote) {

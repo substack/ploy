@@ -8,6 +8,8 @@ usage:
  
     If AUTHFILE is given, it should be a json file that maps usernames to
     token strings to use for basic auth protection for ploy actions.
+    
+    Type `ploy help ssl` to show ssl options.
  
   ploy ls { -r REMOTE }
  
@@ -21,9 +23,11 @@ usage:
  
     Remove the branch name at NAME, killing any running processes.
  
-  ploy help
+  ploy help [TOPIC]
  
-    Show this message. 
+    Show this message or optionally a TOPIC.
+    
+    Topics: ssl
 
 OPTIONS
 
