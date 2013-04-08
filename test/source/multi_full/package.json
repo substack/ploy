@@ -1,0 +1,10 @@
+{
+  "name": "ploy-test-repo",
+  "version": "0.0.0",
+  "scripts": {
+    "start": {
+      "beep.com": "node beep.js",
+      "boop.net": "node boop.js"
+    }
+  }
+}
