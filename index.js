@@ -49,11 +49,7 @@ Ploy.prototype.createBouncer = function (opts) {
         if (!subdomain) subdomain = parts.slice(0,-2).join('.')
             || parts.slice(0,-1).join('.')
         ;
-        var branch = (self.branches[subdomain] && subdomain)
-            || (self.branches[subdomain + '.master'] && subdomain + '.master')
-            || (self.branches['master.' + host] && 'master.' + host)
-            || 'master'
-        ;
+        var branch = (self.branches[subdomain] && subdomain) || 'master';
         
         if (RegExp('^/_ploy\\b').test(req.url)) {
             if (self.auth) {
