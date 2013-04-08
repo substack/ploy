@@ -25,6 +25,7 @@ function Ploy (opts) {
     self.branches = {};
     self.delay = opts.delay == undefined ? 3000 : opts.delay;
     self.regexp = null;
+    self._keys = {};
     self.workdir = opts.workdir;
     
     self.ci = cicada(opts);
@@ -43,13 +44,14 @@ Ploy.prototype.createBouncer = function (opts) {
         var subdomain;
         if (self.regexp) {
             var m = host.match(self.regexp);
-            if (m) subdomain = m[1];
+            if (m) subdomain = self._keys[m[1]] || m[1];
         }
         if (!subdomain) subdomain = parts.slice(0,-2).join('.')
             || parts.slice(0,-1).join('.')
         ;
         var branch = (self.branches[subdomain] && subdomain)
             || (self.branches[subdomain + '.master'] && subdomain + '.master')
+            || (self.branches['master.' + host] && 'master.' + host)
             || 'master'
         ;
         
@@ -146,6 +148,8 @@ Ploy.prototype.deploy = function (commit) {
                 port: ps.port,
                 hash: commit.hash,
                 repo: commit.repo,
+                branch: commit.branch,
+                key: ps.key,
                 process: ps
             });
         }, self.branches[ps.host] ? self.delay : 0);
@@ -166,11 +170,25 @@ Ploy.prototype.add = function (name, rec) {
 };
 
 Ploy.prototype._rescanRegExp = function () {
-    this.regexp = RegExp('^('
-        + Object.keys(this.branches).map(function (key) {
-            return quotemeta(key);
-        })
+    var self = this;
+    self._keys = {};
+    self.regexp = RegExp('^(' + Object.keys(self.branches)
         .sort(function (a, b) { return b.length - a.length })
+        .map(function (key) {
+            var b = self.branches[key];
+            var s = quotemeta(key);
+            if (b.key === 'index') {
+                self._keys[b.key] = key;
+                return s;
+            }
+            self._keys[b.branch + '.' + b.key] = key;
+            s += '|' + quotemeta(b.branch + '.' + b.key);
+            if (b.branch === 'master') {
+                s += '|' + quotemeta(b.key);
+                self._keys[b.key] = key;
+            }
+            return s;
+        })
         .join('|')
         + ')(?:$|\\.)'
     );
