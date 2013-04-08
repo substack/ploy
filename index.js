@@ -103,7 +103,7 @@ Ploy.prototype.restore = function () {
     }
     
     function checkExisting (repo, ref, hash) {
-        var file = path.join(self.workdir, 'commit.json');
+        var file = path.join(self.workdir, repo + '.' + ref + '.json');
         fs.readFile(file, function (err, src) {
             if (err) return restore(repo, ref, hash);
             try { var commit = JSON.parse(String(src)) }
