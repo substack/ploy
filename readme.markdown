@@ -132,6 +132,8 @@ Will host `beep.js` at `beep.domain`, `boop.js` at `boop.domain` and `server.js`
 at just `domain`. When you push to non-master branches, `domain` will be
 prefaced accordingly to mount hosts at `beep.staging.domain` etc.
 
+Each key can be a full url such as `"beepboop.com"` or just a subdomain.
+
 Use the special key `"index"` to set a host to resolve for the root subdomain.
 
 Each service start command will be immediately restarted when it crashes.
