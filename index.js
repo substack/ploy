@@ -75,6 +75,7 @@ Ploy.prototype.createBouncer = function (opts) {
         function prohibit (msg) {
             res.statusCode = 401;
             res.setHeader('www-authenticate', 'basic');
+            res.setHeader('connection', 'close');
             res.end(msg + '\n');
         }
     });
