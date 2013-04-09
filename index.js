@@ -193,7 +193,7 @@ Ploy.prototype._rescanRegExp = function () {
 
 Ploy.prototype.remove = function (name) {
     var b = this.branches[name];
-    if (b) b.process.kill();
+    if (b) b.process.kill('SIGKILL');
     delete this.branches[name];
     this._rescanRegExp();
     
@@ -204,7 +204,7 @@ Ploy.prototype.remove = function (name) {
 
 Ploy.prototype.restart = function (name) {
     var b = this.branches[name];
-    if (b) b.process.kill();
+    if (b) b.process.kill('SIGKILL');
 };
 
 Ploy.prototype.move = function (src, dst) {
