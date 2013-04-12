@@ -133,7 +133,7 @@ Ploy.prototype.deploy = function (commit) {
     var self = this;
     
     var env = clone(process.env);
-    spawnProcess(commit, env, function (err, ps) {
+    var outStream = spawnProcess(commit, env, function (err, ps) {
         if (err) return console.error(err)
         
         var to = setTimeout(function () {
@@ -147,6 +147,7 @@ Ploy.prototype.deploy = function (commit) {
                 repo: commit.repo,
                 branch: commit.branch,
                 key: ps.key,
+                stream: outStream,
                 process: ps
             });
         }, self.branches[ps.host] ? self.delay : 0);
@@ -158,6 +159,7 @@ Ploy.prototype.deploy = function (commit) {
             if (b && b.hash === commit.hash) ps.respawn();
         });
     });
+    outStream.pipe(process.stdout, { end: false });
 };
 
 Ploy.prototype.add = function (name, rec) {
@@ -267,5 +269,11 @@ Ploy.prototype.handle = function (req, res) {
         var name = req.url.split('/')[3];
         this.restart(name);
         res.end();
+    }
+    else if (RegExp('^/_ploy/log\\b').test(req.url)) {
+        var br = this.branches;
+        Object.keys(br).forEach(function (key) {
+            br[key].stream.pipe(res, { end: false });;
+        });
     }
 };
