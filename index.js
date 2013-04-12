@@ -4,6 +4,8 @@ var quotemeta = require('quotemeta');
 
 var path = require('path');
 var fs = require('fs');
+var EventEmitter = require('events').EventEmitter;
+var inherits = require('inherits');
 
 var clone = require('clone');
 var spawn = require('child_process').spawn;
@@ -19,6 +21,8 @@ module.exports = function (opts) {
     }
     return new Ploy(opts);
 };
+
+inherits(Ploy, EventEmitter);
 
 function Ploy (opts) {
     var self = this;
@@ -166,6 +170,7 @@ Ploy.prototype.add = function (name, rec) {
     if (this.branches[name]) this.remove(name);
     this.branches[name] = rec;
     this._rescanRegExp();
+    this.emit('add', name, rec);
 };
 
 Ploy.prototype._rescanRegExp = function () {
@@ -195,7 +200,10 @@ Ploy.prototype._rescanRegExp = function () {
 
 Ploy.prototype.remove = function (name) {
     var b = this.branches[name];
-    if (b) b.process.kill('SIGKILL');
+    if (b) {
+        b.process.kill('SIGKILL');
+        this.emit('remove', name, b);
+    }
     delete this.branches[name];
     this._rescanRegExp();
     
@@ -244,36 +252,49 @@ Ploy.prototype.close = function () {
 };
 
 Ploy.prototype.handle = function (req, res) {
+    var self = this;
+    
     if (RegExp('^/_ploy/[^?]+\\.git\\b').test(req.url)) {
         req.url = req.url.replace(RegExp('^/_ploy/'), '/');
-        this.ci.handle(req, res);
+        self.ci.handle(req, res);
     }
     else if (RegExp('^/_ploy/move/').test(req.url)) {
         var xs = req.url.split('/').slice(3);
         var src = xs[0], dst = xs[1];
-        this.move(src, dst);
+        self.move(src, dst);
         res.end();
     }
     else if (RegExp('^/_ploy/remove/').test(req.url)) {
         var name = req.url.split('/')[3];
-        this.remove(name);
+        self.remove(name);
         res.end();
     }
     else if (RegExp('^/_ploy/list').test(req.url)) {
-        res.end(Object.keys(this.branches)
+        res.end(Object.keys(self.branches)
             .map(function (s) { return s + '\n' })
             .join('')
         );
     }
     else if (RegExp('^/_ploy/restart/').test(req.url)) {
         var name = req.url.split('/')[3];
-        this.restart(name);
+        self.restart(name);
         res.end();
     }
     else if (RegExp('^/_ploy/log\\b').test(req.url)) {
-        var br = this.branches;
-        Object.keys(br).forEach(function (key) {
-            br[key].stream.pipe(res, { end: false });;
+        var onadd = function (name, b) {
+            if (keys.indexOf(name) >= 0) return;
+            keys.push(name);
+            b.stream.pipe(res, { end: false });
+        };
+        self.on('add', onadd);
+        
+        res.on('close', function () {
+            self.removeListener('add', onadd);
+        });
+        
+        var keys = Object.keys(self.branches);
+        keys.forEach(function (key) {
+            self.branches[key].stream.pipe(res, { end: false });
         });
     }
 };
