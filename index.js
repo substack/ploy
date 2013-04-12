@@ -140,6 +140,8 @@ Ploy.prototype.deploy = function (commit) {
     var outStream = spawnProcess(commit, env, function (err, ps) {
         if (err) return console.error(err)
         
+        self.emit('spawn', ps.host, ps, outStream);
+        
         var to = setTimeout(function () {
             // didn't crash in 3 seconds, add to routing table
             if (self.branches[ps.host]) {
@@ -281,15 +283,15 @@ Ploy.prototype.handle = function (req, res) {
         res.end();
     }
     else if (RegExp('^/_ploy/log\\b').test(req.url)) {
-        var onadd = function (name, b) {
+        var onspawn = function (name, ps, stream) {
             if (keys.indexOf(name) >= 0) return;
             keys.push(name);
-            b.stream.pipe(res, { end: false });
+            stream.pipe(res, { end: false });
         };
-        self.on('add', onadd);
+        self.on('spawn', onspawn);
         
         res.on('close', function () {
-            self.removeListener('add', onadd);
+            self.removeListener('spawn', onspawn);
         });
         
         var keys = Object.keys(self.branches);
