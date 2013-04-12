@@ -255,6 +255,7 @@ Ploy.prototype.close = function () {
 
 Ploy.prototype.handle = function (req, res) {
     var self = this;
+    var m;
     
     if (RegExp('^/_ploy/[^?]+\\.git\\b').test(req.url)) {
         req.url = req.url.replace(RegExp('^/_ploy/'), '/');
@@ -282,9 +283,10 @@ Ploy.prototype.handle = function (req, res) {
         self.restart(name);
         res.end();
     }
-    else if (RegExp('^/_ploy/log\\b').test(req.url)) {
+    else if (m = RegExp('^/_ploy/log(?:/(.+)|$)').exec(req.url)) {
         var onspawn = function (name, ps, stream) {
             if (keys.indexOf(name) >= 0) return;
+            if (m[1] && m[1] !== name) return;
             keys.push(name);
             stream.pipe(res, { end: false });
         };
@@ -294,7 +296,9 @@ Ploy.prototype.handle = function (req, res) {
             self.removeListener('spawn', onspawn);
         });
         
-        var keys = Object.keys(self.branches);
+        var keys = (m[1] && [ m[1] ] || Object.keys(self.branches))
+            .filter(function (key) { return self.branches[key] })
+        ;
         keys.forEach(function (key) {
             self.branches[key].stream.pipe(res, { end: false });
         });
