@@ -174,7 +174,6 @@ Ploy.prototype.deploy = function (commit) {
                 repo: commit.repo,
                 branch: commit.branch,
                 key: ps.key,
-                stream: ps.stream,
                 process: ps
             });
         }, self.branches[name] ? self.delay : 0);
@@ -303,55 +302,10 @@ Ploy.prototype.handle = function (req, res) {
         self.restart(name);
         res.end();
     }
-    else if (m = RegExp('^/_ploy/log(?:/(.+)|)?(:-?\\d+(?:,-?\\d+)?)?$')
-    .exec(req.url)) {
-        var branch = m[1] || 'master';
-        if (m[2] && self.logdir) {
-            var xs = sliceFile(path.join(self.logdir, branch));
-            var s = xs.slice.apply(xs, m[2].split(','));
-            
-            var closed = false;
-            res.once('close', function () { closed = true });
-            
-            s.on('end', function () {
-                if (closed || /,$/.test(m[2])) return;
-                var ls = self.createLogStream(m[1]);
-                res.once('close', function () { ls.close() });
-                ls.pipe(res);
-            });
-            s.pipe(res, { end: false });
-        }
-        else {
-            var s = self.createLogStream(branch);
-            res.once('close', function () { s.close() });
-            s.pipe(res);
-        }
+    else if (m = RegExp('^/_ploy/log/([^/]+)').exec(req.url)) {
+        var file = path.join(self.logdir, m[1]);
+        var sf = sliceFile(file);
+        sf.on('error', function (err) { res.end(err + '\n') });
+        sf.follow(-30).pipe(res);
     }
-};
-
-Ploy.prototype.createLogStream = function (name) {
-    var self = this;
-    var output = through();
-    
-    var onoutput = function (key, stream) {
-        if (keys.indexOf(key) >= 0) return;
-        if (name && name !== key) return;
-        keys.push(key);
-        stream.pipe(output, { end: false });
-    };
-    self.on('output', onoutput);
-    
-    output.close = function () {
-        self.removeListener('output', onoutput);
-        output.emit('close');
-    };
-    
-    var keys = (name && [ name ] || Object.keys(self.branches))
-        .filter(function (key) { return self.branches[key] })
-    ;
-    keys.forEach(function (key) {
-        self.branches[key].stream.pipe(output, { end: false });
-    });
-    
-    return output;
 };
