@@ -169,8 +169,8 @@ Ploy.prototype.deploy = function (commit) {
         self.emit('output', name, stream);
     });
     
-    procs.on('run', function (name, ps) {
-        self.emit('run', name, ps);
+    procs.on('start', function (name, ps) {
+        self.emit('start', name, ps);
         
         var to = setTimeout(function () {
             // didn't crash in 3 seconds, add to routing table
@@ -193,6 +193,10 @@ Ploy.prototype.deploy = function (commit) {
             var b = self.branches[name];
             if (b && b.hash === commit.hash) ps.respawn();
         });
+    });
+    
+    procs.on('restart', function (name, ps) {
+        self.emit('restart', name, ps);
     });
 };
 
