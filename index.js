@@ -314,9 +314,13 @@ Ploy.prototype.handle = function (req, res) {
         var sf = sliceFile(file);
         sf.on('error', function (err) { res.end(err + '\n') });
         res.on('close', function () { sf.close() });
-        if (params.follow === 'false' || (!params.follow && e)) {
+        if (falsy(params.follow)) {
             sf.slice(b, e).pipe(res);
         }
         else sf.follow(b, e).pipe(res);
     }
+};
+
+function falsy (x) {
+    return !x || x === 'no' || x === 'false' || x === '0';
 };

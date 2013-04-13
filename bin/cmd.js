@@ -75,16 +75,15 @@ else if (cmd === 'log' && argv._.length) {
         var end = defined(argv.end, argv.e);
         var follow = defined(argv.follow, argv.f);
         
-        if (begin === undefined && end === undefined && argv.n) {
-            begin = -argv.n;
-            if (follow === undefined) follow = false;
-        }
-        
-        if (begin === undefined && follow === true) {
-            begin = undefined;
+        if (argv.n === 0) {
             end = 0;
         }
-        else if (begin === undefined && process.stdout.rows) {
+        else if (argv.n !== undefined) {
+            begin = -argv.n;
+            end = undefined;
+        }
+        
+        if (begin === undefined && process.stdout.rows) {
             begin = 2 - process.stdout.rows;
         }
         

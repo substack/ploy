@@ -79,11 +79,11 @@ usage:
     List the running process branch names at REMOTE.
  
   ploy log NAME { -n ROWS | -f | -b BEGIN | -e END }
-  
-    Show stdout and stderr for the branch at NAME.
+
+    Show ROWS of log output for the branch NAME like `tail`.
+    Default -n value: screen height.
  
-    Include `-n` rows of historical content. Default: terminal screen height.
-    Print realtime updates when `-f` is set. Default: true unless `-n` is given.
+    Stream live updates when `-f` is set like `tail -f`.
     Slice log records for NAME directly with `-b` and `-e`.
 
   ploy mv SRC DST { -r REMOTE }
