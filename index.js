@@ -160,7 +160,7 @@ Ploy.prototype.deploy = function (commit) {
         }
         self.emit('output', name, stream);
         
-        [ 'start', 'restart' ].forEach(function (ev) {
+        [ 'start', 'restart', 'exit' ].forEach(function (ev) {
             procs.on(ev, function (name, ps) {
                 var logMessage = {
                     event: ev,
@@ -198,6 +198,7 @@ Ploy.prototype.deploy = function (commit) {
         ps.once('exit', function (code) {
             clearTimeout(to);
             
+console.log('EXIT');
             var b = self.branches[name];
             if (b && b.hash === commit.hash) ps.respawn();
         });
