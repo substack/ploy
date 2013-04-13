@@ -9,6 +9,8 @@ var exec = require('child_process').exec;
 var hyperquest = require('hyperquest');
 var defined = require('defined');
 var qs = require('querystring');
+var split = require('split');
+var through = require('through');
 
 var fs = require('fs');
 var path = require('path');
@@ -25,16 +27,7 @@ if (cmd === 'help' || argv.h || argv.help || process.argv.length <= 2) {
     rs.pipe(process.stdout);
 }
 else if (cmd === 'list' || cmd === 'ls') {
-    getRemote(function (err, remote) {
-        if (err) return error(err);
-        
-        var hq = hyperquest(remote + '/list');
-        hq.pipe(process.stdout);
-        hq.on('error', function (err) {
-            var msg = 'Error connecting to ' + remote + ': ' + err.message;
-            console.error(msg);
-        });
-    });
+    showList();
 }
 else if (cmd === 'move' || cmd === 'mv') {
     argv._.shift();
@@ -68,16 +61,37 @@ else if (cmd === 'remove' || cmd === 'rm') {
 else if (cmd === 'log' && argv._.length) {
     argv._.shift();
     var name = argv.name || argv._.shift();
+    if (!name) {
+        console.log(
+            'usage; ploy log BRANCH\n\n'
+            + 'Available branches:\n'
+        );
+        return showList(2);
+    }
+    
     getRemote(function (err, remote) {
         if (err) return error(err);
-        var begin = defined(argv.begin, argv.b, 2 - process.stdout.rows);
-        if (argv.follow === true) begin = undefined;
+        var begin = defined(argv.begin, argv.b);
+        var end = defined(argv.end, argv.e);
+        var follow = defined(argv.follow, argv.f);
         
-        var params = {
-            begin: begin === undefined ? undefined : begin,
-            end: defined(argv.end, argv.e),
-            follow: argv.follow === false ? 'false' : undefined
-        };
+        if (begin === undefined && end === undefined && argv.n) {
+            begin = -argv.n;
+            if (follow === undefined) follow = false;
+        }
+        
+        if (begin === undefined && follow === true) {
+            begin = undefined;
+            end = 0;
+        }
+        else if (begin === undefined && process.stdout.rows) {
+            begin = 2 - process.stdout.rows;
+        }
+        
+        var params = { begin: begin, end: end, follow: follow };
+        Object.keys(params).forEach(function (key) {
+            if (params[key] === undefined) delete params[key];
+        });
         
         var href = remote + '/log/' + name + '?' + qs.stringify(params);
         var hq = hyperquest(href);
@@ -160,5 +174,22 @@ function getRemotes (cb) {
         else cb(null, Object.keys(remotes).map(function (name) {
             return remotes[name];
         }));
+    });
+}
+
+function showList (indent) {
+    if (!indent) indent = 0;
+    
+    getRemote(function (err, remote) {
+        if (err) return error(err);
+        
+        var hq = hyperquest(remote + '/list');
+        hq.pipe(split()).pipe(through(function (line) {
+            this.queue(Array(indent+1).join(' ') + line + '\n');
+        })).pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
     });
 }
