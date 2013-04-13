@@ -1,6 +1,7 @@
 var bouncy = require('bouncy');
 var cicada = require('cicada');
 var quotemeta = require('quotemeta');
+var mkdirp = require('mkdirp');
 
 var sliceFile = require('slice-file');
 var through = require('through');
@@ -36,6 +37,7 @@ function Ploy (opts) {
     self._keys = {};
     self.workdir = opts.workdir;
     self.logdir = opts.logdir;
+    if (opts.logdir) mkdirp(opts.logdir);
     
     self.ci = cicada(opts);
     self.ci.on('commit', self.deploy.bind(self));
@@ -145,12 +147,21 @@ Ploy.prototype.deploy = function (commit) {
     var procs = spawnProcess(commit, env);
     procs.on('error', function (err) { console.error(err) });
     
+    procs.on('spawn', function (ps, sp) {
+        self.emit('spawn', ps, sp);
+    });
+    
     procs.on('output', function (name, stream) {
+        if (self.logdir) {
+            var file = path.join(self.logdir, name);
+            var ws = fs.createWriteStream(file, { flags: 'a' });
+            stream.pipe(ws);
+        }
         self.emit('output', name, stream);
     });
     
-    procs.on('spawn', function (name, ps) {
-        self.emit('spawn', name, ps);
+    procs.on('run', function (name, ps) {
+        self.emit('run', name, ps);
         
         var to = setTimeout(function () {
             // didn't crash in 3 seconds, add to routing table
@@ -175,8 +186,6 @@ Ploy.prototype.deploy = function (commit) {
             if (b && b.hash === commit.hash) ps.respawn();
         });
     });
-    var outStream =
-    outStream.pipe(process.stdout, { end: false });
 };
 
 Ploy.prototype.add = function (name, rec) {

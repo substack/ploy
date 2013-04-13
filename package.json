@@ -15,7 +15,8 @@
         "quotemeta": "~0.0.0",
         "hyperquest": "~0.1.0",
         "slice-file": "~0.1.0",
-        "through": "~2.2.7"
+        "through": "~2.2.7",
+        "mkdirp": "~0.3.5"
     },
     "devDependencies": {
         "tap": "~0.4.0",        
