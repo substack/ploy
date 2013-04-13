@@ -15,6 +15,14 @@ usage:
  
     List the running process branch names at REMOTE.
  
+  ploy log NAME { -n ROWS | -f | -b BEGIN | -e END }
+  
+    Show stdout and stderr for the branch at NAME.
+ 
+    Include `-n` rows of historical content. Default: terminal screen height.
+    Print realtime updates when `-f` is set. Default: true unless `-n` is given.
+    Slice log records for NAME directly with `-b` and `-e`.
+
   ploy mv SRC DST { -r REMOTE }
  
     Move the branch name SRC to the DST branch name at REMOTE.
