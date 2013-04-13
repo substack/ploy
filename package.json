@@ -1,6 +1,6 @@
 {
     "name": "ploy",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "description": "git push deploy http router, hosting branches on subdomains",
     "bin": {
         "ploy": "bin/cmd.js"
