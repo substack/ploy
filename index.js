@@ -3,13 +3,14 @@ var cicada = require('cicada');
 var quotemeta = require('quotemeta');
 var mkdirp = require('mkdirp');
 
-var sliceFile = require('slice-file');
-var through = require('through');
-
 var path = require('path');
 var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('inherits');
+
+var qs = require('querystring');
+var url = require('url');
+var sliceFile = require('slice-file');
 
 var clone = require('clone');
 var spawn = require('child_process').spawn;
@@ -302,10 +303,16 @@ Ploy.prototype.handle = function (req, res) {
         self.restart(name);
         res.end();
     }
-    else if (m = RegExp('^/_ploy/log/([^/]+)').exec(req.url)) {
+    else if (m = RegExp('^/_ploy/log/([^?/]+)').exec(req.url)) {
+        var params = qs.parse((url.parse(req.url).search || '').slice(1));
+        
         var file = path.join(self.logdir, m[1]);
         var sf = sliceFile(file);
         sf.on('error', function (err) { res.end(err + '\n') });
-        sf.follow(-30).pipe(res);
+        res.on('close', function () { sf.close() });
+        if (params.follow === 'false' || (!params.follow && params.end)) {
+            sf.slice(params.begin, params.end).pipe(res);
+        }
+        else sf.follow(params.begin, params.end).pipe(res);
     }
 };
