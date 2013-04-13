@@ -2,6 +2,9 @@ var bouncy = require('bouncy');
 var cicada = require('cicada');
 var quotemeta = require('quotemeta');
 
+var sliceFile = require('slice-file');
+var through = require('through');
+
 var path = require('path');
 var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
@@ -16,7 +19,8 @@ module.exports = function (opts) {
     if (typeof opts === 'string') {
         opts = {
             repodir: path.resolve(opts + '/repo'),
-            workdir: path.resolve(opts + '/work')
+            workdir: path.resolve(opts + '/work'),
+            logdir: path.resolve(opts + '/log')
         };
     }
     return new Ploy(opts);
@@ -31,6 +35,7 @@ function Ploy (opts) {
     self.regexp = null;
     self._keys = {};
     self.workdir = opts.workdir;
+    self.logdir = opts.logdir;
     
     self.ci = cicada(opts);
     self.ci.on('commit', self.deploy.bind(self));
@@ -137,34 +142,40 @@ Ploy.prototype.deploy = function (commit) {
     var self = this;
     
     var env = clone(process.env);
-    var outStream = spawnProcess(commit, env, function (err, ps) {
-        if (err) return console.error(err)
-        
-        self.emit('spawn', ps.host, ps, outStream);
+    var procs = spawnProcess(commit, env);
+    procs.on('error', function (err) { console.error(err) });
+    
+    procs.on('output', function (name, stream) {
+        self.emit('output', name, stream);
+    });
+    
+    procs.on('spawn', function (name, ps) {
+        self.emit('spawn', name, ps);
         
         var to = setTimeout(function () {
             // didn't crash in 3 seconds, add to routing table
-            if (self.branches[ps.host]) {
-                self.remove(ps.host);
+            if (self.branches[name]) {
+                self.remove(name);
             }
-            self.add(ps.host, {
+            self.add(name, {
                 port: ps.port,
                 hash: commit.hash,
                 repo: commit.repo,
                 branch: commit.branch,
                 key: ps.key,
-                stream: outStream,
+                stream: ps.stream,
                 process: ps
             });
-        }, self.branches[ps.host] ? self.delay : 0);
+        }, self.branches[name] ? self.delay : 0);
         
         ps.once('exit', function (code) {
             clearTimeout(to);
             
-            var b = self.branches[ps.host];
+            var b = self.branches[name];
             if (b && b.hash === commit.hash) ps.respawn();
         });
     });
+    var outStream =
     outStream.pipe(process.stdout, { end: false });
 };
 
@@ -283,24 +294,55 @@ Ploy.prototype.handle = function (req, res) {
         self.restart(name);
         res.end();
     }
-    else if (m = RegExp('^/_ploy/log(?:/(.+)|$)').exec(req.url)) {
-        var onspawn = function (name, ps, stream) {
-            if (keys.indexOf(name) >= 0) return;
-            if (m[1] && m[1] !== name) return;
-            keys.push(name);
-            stream.pipe(res, { end: false });
-        };
-        self.on('spawn', onspawn);
-        
-        res.on('close', function () {
-            self.removeListener('spawn', onspawn);
-        });
-        
-        var keys = (m[1] && [ m[1] ] || Object.keys(self.branches))
-            .filter(function (key) { return self.branches[key] })
-        ;
-        keys.forEach(function (key) {
-            self.branches[key].stream.pipe(res, { end: false });
-        });
+    else if (m = RegExp('^/_ploy/log(?:/(.+)|)?(:-?\\d+(?:,-?\\d+)?)?$')
+    .exec(req.url)) {
+        var branch = m[1] || 'master';
+        if (m[2] && self.logdir) {
+            var xs = sliceFile(path.join(self.logdir, branch));
+            var s = xs.slice.apply(xs, m[2].split(','));
+            
+            var closed = false;
+            res.once('close', function () { closed = true });
+            
+            s.on('end', function () {
+                if (closed || /,$/.test(m[2])) return;
+                var ls = self.createLogStream(m[1]);
+                res.once('close', function () { ls.close() });
+                ls.pipe(res);
+            });
+            s.pipe(res, { end: false });
+        }
+        else {
+            var s = self.createLogStream(branch);
+            res.once('close', function () { s.close() });
+            s.pipe(res);
+        }
     }
+};
+
+Ploy.prototype.createLogStream = function (name) {
+    var self = this;
+    var output = through();
+    
+    var onoutput = function (key, stream) {
+        if (keys.indexOf(key) >= 0) return;
+        if (name && name !== key) return;
+        keys.push(key);
+        stream.pipe(output, { end: false });
+    };
+    self.on('output', onoutput);
+    
+    output.close = function () {
+        self.removeListener('output', onoutput);
+        output.emit('close');
+    };
+    
+    var keys = (name && [ name ] || Object.keys(self.branches))
+        .filter(function (key) { return self.branches[key] })
+    ;
+    keys.forEach(function (key) {
+        self.branches[key].stream.pipe(output, { end: false });
+    });
+    
+    return output;
 };
