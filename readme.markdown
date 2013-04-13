@@ -94,6 +94,10 @@ usage:
  
     Remove the branch name at NAME, killing any running processes.
  
+  ploy restart NAME { -r REMOTE }
+ 
+    Restart the process at NAME.
+ 
   ploy help [TOPIC]
  
     Show this message or optionally a TOPIC.

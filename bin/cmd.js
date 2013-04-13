@@ -44,6 +44,20 @@ else if (cmd === 'move' || cmd === 'mv') {
         });
     });
 }
+else if (cmd === 'restart') {
+    argv._.shift();
+    var name = argv.name || argv._.shift();
+    getRemote(function (err, remote) {
+        if (err) return error(err);
+        
+        var hq = hyperquest(remote + '/restart/' + name);
+        hq.pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
+    });
+}
 else if (cmd === 'remove' || cmd === 'rm') {
     argv._.shift();
     var name = argv.name || argv._.shift();
