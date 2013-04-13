@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var ploy = require('../');
-var argv = require('optimist').argv;
+var argv = require('optimist').boolean(['q','quiet']).argv;
 var exec = require('child_process').exec;
 var hyperquest = require('hyperquest');
 
@@ -71,10 +71,12 @@ else {
     };
     
     var server = ploy(opts);
-    server.on('spawn', function (ps) {
-        ps.stdout.pipe(process.stdout, { end: false });
-        ps.stderr.pipe(process.stderr, { end: false });
-    });
+    if (!argv.q && !argv.quiet) {
+        server.on('spawn', function (ps) {
+            ps.stdout.pipe(process.stdout, { end: false });
+            ps.stderr.pipe(process.stderr, { end: false });
+        });
+    }
     server.listen(argv.port || argv.p || 80);
     
     if (argv.ca || argv.pfx) {
