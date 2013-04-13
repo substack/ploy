@@ -200,6 +200,20 @@ Restart the process at the branch `name`.
 Move the process at branch name `src` to `dst`, killing the branch process at
 `src` if it was running.
 
+# events
+
+## server.on('spawn', function (ps, info) {})
+
+When a process is created from `npm install` or one of the package.json start
+scripts, this event fires with the `info.commit` and `info.command` executed.
+
+## server.on('output', function (name, stream) {})
+
+When there is a new output stream for a branch, this event fires with the
+readable `stream`.
+
+Output streams merge the output from all the processes used to start a branch.
+
 # install
 
 With [npm](https://npmjs.org) do:
