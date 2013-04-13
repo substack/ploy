@@ -70,11 +70,11 @@ else if (cmd === 'log' && argv._.length) {
     var name = argv.name || argv._.shift();
     getRemote(function (err, remote) {
         if (err) return error(err);
-        var begin = defined(argv.begin, argv.b, process.stdout.rows);
+        var begin = defined(argv.begin, argv.b, 2 - process.stdout.rows);
         if (argv.follow === true) begin = undefined;
         
         var params = {
-            begin: begin === undefined ? undefined : -begin,
+            begin: begin === undefined ? undefined : begin,
             end: defined(argv.end, argv.e),
             follow: argv.follow === false ? 'false' : undefined
         };

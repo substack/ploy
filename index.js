@@ -305,14 +305,18 @@ Ploy.prototype.handle = function (req, res) {
     }
     else if (m = RegExp('^/_ploy/log/([^?/]+)').exec(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
+        var b = Number(params.begin);
+        var e = Number(params.end);
+        if (isNaN(b)) b = undefined;
+        if (isNaN(e)) e = undefined;
         
         var file = path.join(self.logdir, m[1]);
         var sf = sliceFile(file);
         sf.on('error', function (err) { res.end(err + '\n') });
         res.on('close', function () { sf.close() });
-        if (params.follow === 'false' || (!params.follow && params.end)) {
-            sf.slice(params.begin, params.end).pipe(res);
+        if (params.follow === 'false' || (!params.follow && e)) {
+            sf.slice(b, e).pipe(res);
         }
-        else sf.follow(params.begin, params.end).pipe(res);
+        else sf.follow(b, e).pipe(res);
     }
 };
