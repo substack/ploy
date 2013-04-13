@@ -156,17 +156,25 @@ Ploy.prototype.deploy = function (commit) {
         if (self.logdir) {
             var file = path.join(self.logdir, name);
             var ws = fs.createWriteStream(file, { flags: 'a' });
-            var logMessage = {
-                date : new Date,
-                hash  : commit.hash,
-                dir : commit.dir,
-                repo : commit.repo,
-                branch : commit.branch
-            };
-            ws.write(JSON.stringify(logMessage) + "\n");
             stream.pipe(ws);
         }
         self.emit('output', name, stream);
+        
+        [ 'start', 'restart' ].forEach(function (ev) {
+            procs.on(ev, function (name, ps) {
+                var logMessage = {
+                    event: ev,
+                    date : new Date,
+                    host: name,
+                    pid: ps.pid,
+                    hash  : commit.hash,
+                    dir : commit.dir,
+                    repo : commit.repo,
+                    branch : commit.branch
+                };
+                stream.write(JSON.stringify(logMessage) + "\n");
+            });
+        });
     });
     
     procs.on('start', function (name, ps) {
