@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
 var ploy = require('../');
-var argv = require('optimist').boolean(['q','quiet']).argv;
+var argv = require('optimist')
+    .boolean([ 'q', 'quiet' ])
+    .argv
+;
 var exec = require('child_process').exec;
 var hyperquest = require('hyperquest');
+var defined = require('defined');
+var qs = require('querystring');
 
 var fs = require('fs');
 var path = require('path');
@@ -53,6 +58,29 @@ else if (cmd === 'remove' || cmd === 'rm') {
         if (err) return error(err);
         
         var hq = hyperquest(remote + '/remove/' + name);
+        hq.pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
+    });
+}
+else if (cmd === 'log' && argv._.length) {
+    argv._.shift();
+    var name = argv.name || argv._.shift();
+    getRemote(function (err, remote) {
+        if (err) return error(err);
+        var begin = defined(argv.begin, argv.b, process.stdout.rows);
+        if (argv.follow === true) begin = undefined;
+        
+        var params = {
+            begin: begin === undefined ? undefined : -begin,
+            end: defined(argv.end, argv.e),
+            follow: argv.follow === false ? 'false' : undefined
+        };
+        
+        var href = remote + '/log/' + name + '?' + qs.stringify(params);
+        var hq = hyperquest(href);
         hq.pipe(process.stdout);
         hq.on('error', function (err) {
             var msg = 'Error connecting to ' + remote + ': ' + err.message;
