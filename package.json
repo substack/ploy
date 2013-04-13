@@ -1,6 +1,6 @@
 {
     "name": "ploy",
-    "version": "0.6.6",
+    "version": "0.7.0",
     "description": "git push deploy http router, hosting branches on subdomains",
     "bin": {
         "ploy": "bin/cmd.js"
@@ -17,7 +17,8 @@
         "slice-file": "~0.1.0",
         "through": "~2.2.7",
         "mkdirp": "~0.3.5",
-        "defined": "~0.0.0"
+        "defined": "~0.0.0",
+        "split": "~0.0.0"
     },
     "devDependencies": {
         "tap": "~0.4.0",        
