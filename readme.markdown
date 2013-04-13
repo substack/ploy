@@ -162,6 +162,7 @@ instances.
 
 * opts.repodir - directory to put git repo data
 * opts.workdir - directory to check out git repos into
+* opts.logdir - directory to store process stderr and stdout branch files
 * opts.auth - optional object mapping usernames to password token strings for
 basic auth
 
