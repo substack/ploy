@@ -156,6 +156,14 @@ Ploy.prototype.deploy = function (commit) {
         if (self.logdir) {
             var file = path.join(self.logdir, name);
             var ws = fs.createWriteStream(file, { flags: 'a' });
+            var logMessage = {
+                date : new Date,
+                hash  : commit.hash,
+                dir : commit.dir,
+                repo : commit.repo,
+                branch : commit.branch
+            };
+            ws.write(JSON.stringify(logMessage) + "\n");
             stream.pipe(ws);
         }
         self.emit('output', name, stream);
