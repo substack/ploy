@@ -66,10 +66,15 @@ else {
     var opts = {
         repodir: path.join(dir, 'repo'),
         workdir: path.join(dir, 'work'),
+        logdir: path.join(dir, 'log'),
         auth: authFile && JSON.parse(fs.readFileSync(authFile))
     };
     
     var server = ploy(opts);
+    server.on('spawn', function (ps) {
+        ps.stdout.pipe(process.stdout, { end: false });
+        ps.stderr.pipe(process.stderr, { end: false });
+    });
     server.listen(argv.port || argv.p || 80);
     
     if (argv.ca || argv.pfx) {
