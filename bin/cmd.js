@@ -115,7 +115,10 @@ else if (cmd === 'log' && argv._.length) {
         });
     });
 }
-else {
+else if (true || cmd === 'server') {
+    // `ploy` server mode without `ploy server` is scheduled for demolition
+    if (cmd === 'server') argv._.shift();
+    
     var dir = path.resolve(argv.dir || argv.d || argv._.shift() || '.');
     var authFile = argv.auth || argv.a;
     var opts = {

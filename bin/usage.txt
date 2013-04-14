@@ -1,7 +1,7 @@
 usage:
 
-  ploy DIRECTORY PORT
-  ploy { -d DIRECTORY | -p PORT | -a AUTHFILE }
+  ploy server DIRECTORY PORT
+  ploy server { -d DIRECTORY | -p PORT | -a AUTHFILE }
 
     Create a ploy http server, hosting repositories in DIRECTORY and listening
     on PORT for incoming connections.
