@@ -218,6 +218,28 @@ readable `stream`.
 
 Output streams merge the output from all the processes used to start a branch.
 
+# running as non-root
+
+On Linux you can easily setup port forwarding with iptables to avoid running ploy on port 80, which requires root privileges.
+
+You'll need at least 2 new iptables rules to set it up. The first rule will redirect all incoming traffic from port 80 to port 8080:
+
+```
+iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-port 8080
+```
+
+The second rule will redirect all localhost traffic from port 80 to port 8080:
+
+```
+iptables -t nat -I OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j REDIRECT --to-ports 8080
+```
+
+You might also need a third rule if you'll push to ploy from localhost, but will use a hostname instead of `localhost` as ploy's remote url:
+
+```
+iptables -t nat -I OUTPUT -p tcp -d testling.com --dport 80 -j REDIRECT --to-ports 8080
+```
+
 # install
 
 With [npm](https://npmjs.org) do:
