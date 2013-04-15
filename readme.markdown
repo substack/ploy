@@ -7,6 +7,8 @@ git push at this http router and it will host your branches on subdomains
 think [bouncy](https://github.com/substack/bouncy) +
 [cicada](https://github.com/substack/cicada)
 
+*note* ploy only works on node 0.8 right now
+
 # example
 
 create an auth file and start the ploy server:
