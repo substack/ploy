@@ -51,7 +51,7 @@ function pending (n, cb) {
 }
 
 test(setup);
-test(function (t) {
+test({ timeout: 90 * 1000 }, function (t) {
     t.plan(7);
     server.listen(function () {
         port = server.address().port;
