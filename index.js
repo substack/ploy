@@ -205,7 +205,8 @@ Ploy.prototype.deploy = function (commit) {
             repo: commit.repo,
             branch: commit.branch,
             key: ps.key,
-            process: ps
+            process: ps,
+            kill: ps.killer
         });
         
         ps.once('exit', function (code) {
@@ -251,7 +252,7 @@ Ploy.prototype._rescanRegExp = function () {
 Ploy.prototype.remove = function (name) {
     var b = this.branches[name];
     if (b) {
-        b.process.kill('SIGKILL');
+        b.kill();
         this.emit('remove', name, b);
     }
     delete this.branches[name];
@@ -264,7 +265,7 @@ Ploy.prototype.remove = function (name) {
 
 Ploy.prototype.restart = function (name) {
     var b = this.branches[name];
-    if (b) b.process.kill('SIGKILL');
+    if (b) b.kill();
 };
 
 Ploy.prototype.move = function (src, dst) {

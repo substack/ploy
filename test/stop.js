@@ -49,15 +49,19 @@ var port;
 
 test(setup);
 test(function (t) {
-    t.plan(6);
+    t.plan(7);
     server.listen(function () {
         port = server.address().port;
         setTimeout(push0, 2000);
     });
     
-    var allData = '';
-    server.on('spawn', function (ps) {
-        ps.stdout.on('data', function (buf) { allData += buf });
+    server.on('spawn', function (ps, sp) {
+        if (sp.command[0] === './kill.sh') {
+            t.ok(/^\d+$/.test(sp.command[1]));
+            ps.stdout.pipe(concat(function (err, data) {
+                t.ok(/killer killing/.test(data), 'kill script');
+            }));
+        }
     });
     
     function push0 () {
@@ -73,10 +77,8 @@ test(function (t) {
         push('master', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('rawr\n', 'local', function () {
-                    t.ok(/killer killing/.test(allData));
-                });
-            }, 3000);
+                verify('rawr\n', 'local');
+            }, 5000);
         });
     }
     
@@ -91,7 +93,7 @@ test(function (t) {
         var hq = hyperquest('http://localhost:' + port);
         hq.setHeader('host', host);
         hq.pipe(concat(function (err, body) {
-            t.equal(msg, String(body));
+            t.equal(String(body), msg);
             if (cb) cb();
         }));
     }

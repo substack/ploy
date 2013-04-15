@@ -10,7 +10,7 @@
         "bouncy": "~3.1.0",
         "cicada": "~1.0.2",
         "clone": "~0.1.6",
-        "shell-quote": "~0.0.1",
+        "shell-quote": "~0.1.0",
         "optimist": "~0.4.0",
         "quotemeta": "~0.0.0",
         "hyperquest": "~0.1.0",
