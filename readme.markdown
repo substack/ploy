@@ -121,6 +121,8 @@ processes.
 
 Before any services are started, `npm install .` will be run on the deployed
 repo. npm will handle the `preinstall`, `install`, and `postinstall` hooks.
+`postinstall` is a good place to put bundle steps like
+[browserify](http://browserify.org).
 
 If `scripts.start` is a string, ploy will set `$PORT` for a single process and
 host it accordinly.
@@ -149,6 +151,35 @@ Each key can be a full url such as `"beepboop.com"` or just a subdomain.
 Use the special key `"index"` to set a host to resolve for the root subdomain.
 
 Each service start command will be immediately restarted when it crashes.
+
+You can also have a `scripts.stop` that will have a `$PID` environment variable
+defined for the start script that was defined:
+
+``` json
+{
+  "scripts": {
+    "start": "sudo node server.js",
+    "stop": "sudo kill $PID",
+  }
+}
+```
+
+The `scripts.stop` keys work the same as the `scripts.start` keys:
+
+``` json
+{
+  "scripts": {
+    "start": {
+      "x": "node x.js",
+      "y": "node y.js"
+    },
+    "stop": {
+      "x": "node kill.js x",
+      "y": "node kill.js y"
+    }
+  }
+}
+```
 
 # methods
 
