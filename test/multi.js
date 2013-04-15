@@ -2,8 +2,7 @@ var test = require('tap').test;
 var ploy = require('../');
 var path = require('path');
 var spawn = require('child_process').spawn;
-var hyperquest = require('hyperquest');
-var concat = require('concat-stream');
+var verify = require('./lib/verify');
 
 function setup (t) {
     var ps = spawn(__dirname + '/setup.sh', [ 'multi' ], {
@@ -65,8 +64,8 @@ test(function (t) {
             var next = pending(2, deploy);
             
             setTimeout(function () {
-                verify('BEEP\n', 'beep.local', next);
-                verify('BOOP\n', 'boop.local', next);
+                verify(port, t, 'BEEP\n', 'beep.local', next);
+                verify(port, t, 'BOOP\n', 'boop.local', next);
             }, 3000);
         });
     }
@@ -75,8 +74,8 @@ test(function (t) {
         push('staging', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('dino\n', 'beep.staging.local');
-                verify('saur\n', 'boop.staging.local');
+                verify(port, t, 'dino\n', 'beep.staging.local');
+                verify(port, t, 'saur\n', 'boop.staging.local');
             }, 3000);
         });
     }
@@ -86,15 +85,6 @@ test(function (t) {
             t.equal(code, 0);
             push1();
         });
-    }
-    
-    function verify (msg, host, cb) {
-        var hq = hyperquest('http://localhost:' + port);
-        hq.setHeader('host', host);
-        hq.pipe(concat(function (err, body) {
-            t.equal(msg, String(body));
-            if (cb) cb();
-        }));
     }
 });
 test(teardown);
