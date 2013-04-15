@@ -2,8 +2,7 @@ var test = require('tap').test;
 var ploy = require('../');
 var path = require('path');
 var spawn = require('child_process').spawn;
-var hyperquest = require('hyperquest');
-var concat = require('concat-stream');
+var verify = require('./lib/verify');
 
 function setup (t) {
     var ps = spawn(__dirname + '/setup.sh', [ 'deploy' ], {
@@ -59,7 +58,7 @@ test(function (t) {
         push('master', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('beep boop\n', 'local', deploy);
+                verify(port, t, 'beep boop\n', 'local', deploy);
             }, 3000);
         });
     }
@@ -68,7 +67,7 @@ test(function (t) {
         push('staging', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify('rawr\n', 'staging.local');
+                verify(port, t, 'rawr\n', 'staging.local');
             }, 3000);
         });
     }
@@ -78,15 +77,6 @@ test(function (t) {
             t.equal(code, 0);
             push1();
         });
-    }
-    
-    function verify (msg, host, cb) {
-        var hq = hyperquest('http://localhost:' + port);
-        hq.setHeader('host', host);
-        hq.pipe(concat(function (err, body) {
-            t.equal(msg, String(body));
-            if (cb) cb();
-        }));
     }
 });
 test(teardown);
