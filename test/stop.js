@@ -67,18 +67,14 @@ test(function (t) {
     function push0 () {
         push('master', function (code) {
             t.equal(code, 0);
-            setTimeout(function () {
-                verify('beep boop\n', 'local', deploy);
-            }, 3000);
+            verify('beep boop\n', 'local', deploy);
         });
     }
     
     function push1 () {
         push('master', function (code) {
             t.equal(code, 0);
-            setTimeout(function () {
-                verify('rawr\n', 'local');
-            }, 5000);
+            verify('rawr\n', 'local');
         });
     }
     
@@ -90,12 +86,18 @@ test(function (t) {
     }
     
     function verify (msg, host, cb) {
-        var hq = hyperquest('http://localhost:' + port);
-        hq.setHeader('host', host);
-        hq.pipe(concat(function (err, body) {
-            t.equal(String(body), msg);
-            if (cb) cb();
-        }));
+        var times = 0;
+        var iv = setInterval(function () {
+            var hq = hyperquest('http://localhost:' + port);
+            hq.setHeader('host', host);
+            hq.pipe(concat(function (err, body) {
+                if (String(body) === msg || ++times > 15) {
+                    clearInterval(iv);
+                    t.equal(String(body), msg);
+                    if (cb) cb();
+                }
+            }));
+        }, 1000);
     }
 });
 test(teardown);
