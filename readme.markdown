@@ -187,6 +187,28 @@ The `scripts.stop` keys work the same as the `scripts.start` keys:
 }
 ```
 
+## services
+
+You might want to manage non-http services with ploy.
+Just preface the services you don't want to show up in the http routing tables
+with an `'_'` like this:
+
+``` json
+{
+  "scripts": {
+    "start": {
+      "web": "node web.js",
+      "_notweb": "node notweb.js"
+    }
+  }
+}
+```
+
+Underscored non-http services will not be given a `$PORT` to listen on so you'll
+need to figure out how you want multiple services running on the same box to
+work on your own. Consider registering your non-http services with
+[seaport](https://github.com/substack/seaport).
+
 # environment
 
 Each script has these environment variables defined:
