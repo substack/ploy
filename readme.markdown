@@ -183,6 +183,17 @@ The `scripts.stop` keys work the same as the `scripts.start` keys:
 }
 ```
 
+# environment
+
+Each script has these environment variables defined:
+
+* `$cOMMIT` - git hash of the current deploy
+* `$BRANCH` - commit branch name, for example `"master"`
+* `$REPO` - repo name, for example `"repo.git"`
+
+Additionally, `$PATH` is prepended with `node_modules/.bin` so that bin scripts
+installed with npm will be available for install scripts.
+
 # methods
 
 ``` js
