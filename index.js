@@ -76,7 +76,7 @@ Ploy.prototype.createBouncer = function (opts) {
             }
             self.handle(req, res);
         }
-        else if (self.branches[branch]) {
+        else if (!/^_/.test(branch) && self.branches[branch]) {
             bounce(self.branches[branch]);
         }
         else {
