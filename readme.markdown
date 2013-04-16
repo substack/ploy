@@ -118,6 +118,8 @@ OPTIONS
 
 # scripts
 
+## start
+
 ploy will look at your `package.json`'s `scripts.start` field for how to start
 processes.
 
@@ -153,6 +155,8 @@ Each key can be a full url such as `"beepboop.com"` or just a subdomain.
 Use the special key `"index"` to set a host to resolve for the root subdomain.
 
 Each service start command will be immediately restarted when it crashes.
+
+## stop
 
 You can also have a `scripts.stop` that will have a `$PID` environment variable
 defined for the start script that was defined:
