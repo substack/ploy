@@ -8,7 +8,7 @@ var net = require('net');
 var concat = require('concat-stream');
 
 function setup (t) {
-    var ps = spawn(__dirname + '/setup.sh', [ 'multi' ], {
+    var ps = spawn(__dirname + '/setup.sh', [ 'service' ], {
         cwd: __dirname
     });
     ps.on('exit', t.end.bind(t));
@@ -57,11 +57,13 @@ test({ timeout: 90 * 1000 }, function (t) {
     function push0 () {
         push('master', function (code) {
             t.equal(code, 0);
-            var next = pending(2, checkPort);
+            var next = pending(2, function () {
+                setTimeout(checkPort, 2000);
+            });
             
             setTimeout(function () {
                 verify(port, t, 'BEEP\n', 'beep.local', next);
-                verify(port, t, 'host not found\n', 'boop.local', next);
+                verify(port, t, 'host not found\n', '_boop.local', next);
             }, 3000);
         });
     }
