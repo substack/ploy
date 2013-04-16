@@ -67,7 +67,7 @@ test({ timeout: 90 * 1000 }, function (t) {
     }
     
     function checkPort () {
-        fs.readFile(__dirname + '/repo', function (err, src) {
+        fs.readFile(__dirname + '/repo/port.txt', function (err, src) {
             net.connect(Number(src)).pipe(concat(function (err, buf) {
                 t.equal(String(buf), 'BOOP\n');
             }));
