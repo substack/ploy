@@ -341,6 +341,7 @@ Ploy.prototype.handle = function (req, res) {
         var e = Number(params.end);
         if (isNaN(b)) b = undefined;
         if (isNaN(e)) e = undefined;
+        req.connection.setTimeout(0);
         
         var file = path.join(self.logdir, m[1]);
         var sf = sliceFile(file);
@@ -355,4 +356,4 @@ Ploy.prototype.handle = function (req, res) {
 
 function falsy (x) {
     return !x || x === 'no' || x === 'false' || x === '0';
-};
+}
