@@ -2,6 +2,7 @@ var bouncy = require('bouncy');
 var cicada = require('cicada');
 var quotemeta = require('quotemeta');
 var mkdirp = require('mkdirp');
+var through = require('through');
 
 var path = require('path');
 var fs = require('fs');
@@ -349,16 +350,24 @@ Ploy.prototype.handle = function (req, res) {
         function showLog (key) {
             var file = path.join(self.logdir, key);
             var sf = sliceFile(file);
+            var addPrefix = m[1]
+            || (params.prefix !== undefined && falsey(params.prefix))
+                ? through()
+                : through(function (line) {
+                    this.queue('[' + key + '] ' + line);
+                })
+            ;
+            
             sf.on('error', function (err) { res.end(err + '\n') });
             res.on('close', function () { sf.close() });
-            if (falsy(params.follow)) {
-                sf.slice(b, e).pipe(res);
+            if (falsey(params.follow)) {
+                sf.slice(b, e).pipe(addPrefix).pipe(res);
             }
-            else sf.follow(b, e).pipe(res);
+            else sf.follow(b, e).pipe(addPrefix).pipe(res);
         }
     }
 };
 
-function falsy (x) {
+function falsey (x) {
     return !x || x === 'no' || x === 'false' || x === '0';
 }
