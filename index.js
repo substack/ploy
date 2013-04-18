@@ -335,7 +335,7 @@ Ploy.prototype.handle = function (req, res) {
         self.restart(name);
         res.end();
     }
-    else if (m = RegExp('^/_ploy/log/([^?/]+)').exec(req.url)) {
+    else if (m = RegExp('^/_ploy/log(?:$|\\?|/([^?/]+))').exec(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
         var b = Number(params.begin);
         var e = Number(params.end);
@@ -343,14 +343,20 @@ Ploy.prototype.handle = function (req, res) {
         if (isNaN(e)) e = undefined;
         req.connection.setTimeout(0);
         
-        var file = path.join(self.logdir, m[1]);
-        var sf = sliceFile(file);
-        sf.on('error', function (err) { res.end(err + '\n') });
-        res.on('close', function () { sf.close() });
-        if (falsy(params.follow)) {
-            sf.slice(b, e).pipe(res);
+        [].concat(m[1] || Object.keys(self.branches)).forEach(function (file) {
+            var file = path.join(self.logdir, file);
+            showLog(file);
+        });
+        
+        function showLog (file) {
+            var sf = sliceFile(file);
+            sf.on('error', function (err) { res.end(err + '\n') });
+            res.on('close', function () { sf.close() });
+            if (falsy(params.follow)) {
+                sf.slice(b, e).pipe(res);
+            }
+            else sf.follow(b, e).pipe(res);
         }
-        else sf.follow(b, e).pipe(res);
     }
 };
 

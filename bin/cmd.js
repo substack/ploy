@@ -75,13 +75,6 @@ else if (cmd === 'remove' || cmd === 'rm') {
 else if (cmd === 'log' && argv._.length) {
     argv._.shift();
     var name = argv.name || argv._.shift();
-    if (!name) {
-        console.log(
-            'usage; ploy log BRANCH\n\n'
-            + 'Available branches:\n'
-        );
-        return showList(2);
-    }
     
     getRemote(function (err, remote) {
         if (err) return error(err);
@@ -106,7 +99,10 @@ else if (cmd === 'log' && argv._.length) {
             if (params[key] === undefined) delete params[key];
         });
         
-        var href = remote + '/log/' + name + '?' + qs.stringify(params);
+        var href = remote + '/log'
+            + (name ? '/' + name : '')
+            + '?' + qs.stringify(params)
+        ;
         var hq = hyperquest(href);
         hq.pipe(process.stdout);
         hq.on('error', function (err) {
