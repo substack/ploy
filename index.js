@@ -353,7 +353,8 @@ Ploy.prototype.handle = function (req, res) {
             var addPrefix = m[1]
             || (params.prefix !== undefined && falsey(params.prefix))
                 ? through()
-                : through(function (line) {
+                : through(function (buf) {
+                    var line = String(buf);
                     if (params.format === 'json') {
                         this.queue(JSON.stringify([ key, line ]) + '\n');
                     }

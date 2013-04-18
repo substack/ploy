@@ -80,7 +80,7 @@ else if (cmd === 'log' && argv._.length) {
         if (err) return error(err);
         var begin = defined(argv.begin, argv.b);
         var end = defined(argv.end, argv.e);
-        var follow = argv.follow || argv.f;
+        var follow = defined(argv.follow, argv.f);
         
         if (argv.n === 0) {
             end = 0;
