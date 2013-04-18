@@ -3,6 +3,8 @@ var ploy = require('../');
 var path = require('path');
 var spawn = require('child_process').spawn;
 var verify = require('./lib/verify');
+var push = require('./lib/push');
+
 var fs = require('fs');
 var net = require('net');
 var concat = require('concat-stream');
@@ -26,18 +28,6 @@ function teardown (t) {
     });
 }
 
-function push (branch, cb) {
-    var args = [
-        'push',
-        'http://localhost:' + port + '/_ploy/repo.git',
-        branch
-    ];
-    var ps = spawn('git', args, {
-        cwd: __dirname + '/repo'
-    });
-    ps.on('exit', cb);
-}
-
 var tmpDir = '/tmp/ploy-test/' + Math.random();
 var server = ploy(tmpDir);
 var port;
@@ -55,7 +45,7 @@ test({ timeout: 90 * 1000 }, function (t) {
     });
     
     function push0 () {
-        push('master', function (code) {
+        push(port, 'master', function (code) {
             t.equal(code, 0);
             var next = pending(2, function () {
                 setTimeout(checkPort, 2000);

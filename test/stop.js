@@ -4,6 +4,7 @@ var path = require('path');
 var spawn = require('child_process').spawn;
 var concat = require('concat-stream');
 var verify = require('./lib/verify');
+var push = require('./lib/push');
 
 function setup (t) {
     var ps = spawn(__dirname + '/setup.sh', [ 'stop' ], {
@@ -31,18 +32,6 @@ function commit (cb) {
     ps.on('exit', cb);
 }
 
-function push (branch, cb) {
-    var args = [
-        'push',
-        'http://localhost:' + port + '/_ploy/repo.git',
-        branch
-    ];
-    var ps = spawn('git', args, {
-        cwd: __dirname + '/repo'
-    });
-    ps.on('exit', cb);
-}
-
 var tmpDir = '/tmp/ploy-test/' + Math.random();
 var server = ploy(tmpDir);
 var port;
@@ -65,14 +54,14 @@ test({ timeout: 90 * 1000 }, function (t) {
     });
     
     function push0 () {
-        push('master', function (code) {
+        push(port, 'master', function (code) {
             t.equal(code, 0);
             verify(port, t, 'beep boop\n', 'local', deploy);
         });
     }
     
     function push1 () {
-        push('master', function (code) {
+        push(port, 'master', function (code) {
             t.equal(code, 0);
             verify(port, t, 'rawr\n', 'local');
         });
