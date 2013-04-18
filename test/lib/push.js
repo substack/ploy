@@ -5,7 +5,7 @@ var dir = __dirname + '/../repo';
 module.exports = function check (port, branch, cb) {
     fs.exists(dir, function (ex) {
         if (ex) setTimeout(push, 1000, port, branch, cb)
-        else setTimeout(check, 1000)
+        else setTimeout(check, 1000, port, branch, cb)
     });
 };
     
