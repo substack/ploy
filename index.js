@@ -343,12 +343,11 @@ Ploy.prototype.handle = function (req, res) {
         if (isNaN(e)) e = undefined;
         req.connection.setTimeout(0);
         
-        [].concat(m[1] || Object.keys(self.branches)).forEach(function (file) {
-            var file = path.join(self.logdir, file);
-            showLog(file);
-        });
+        [].concat(m[1] || Object.keys(self.branches)).forEach(showLog);
+        self.on('add', showLog);
         
-        function showLog (file) {
+        function showLog (key) {
+            var file = path.join(self.logdir, key);
             var sf = sliceFile(file);
             sf.on('error', function (err) { res.end(err + '\n') });
             res.on('close', function () { sf.close() });
