@@ -80,7 +80,7 @@ else if (cmd === 'log' && argv._.length) {
         if (err) return error(err);
         var begin = defined(argv.begin, argv.b);
         var end = defined(argv.end, argv.e);
-        var follow = defined(argv.follow, argv.f);
+        var follow = argv.follow || argv.f;
         
         if (argv.n === 0) {
             end = 0;
@@ -95,6 +95,13 @@ else if (cmd === 'log' && argv._.length) {
         }
         
         var params = { begin: begin, end: end, follow: follow };
+        if (!params.format && !name
+        && (process.stdout.isTTY || argv.color)
+        && String(argv.color) !== 'false') {
+            params.color = true;
+        }
+        if (params.color && !params.format) params.format = 'json';
+        
         Object.keys(params).forEach(function (key) {
             if (params[key] === undefined) delete params[key];
         });
@@ -104,7 +111,23 @@ else if (cmd === 'log' && argv._.length) {
             + '?' + qs.stringify(params)
         ;
         var hq = hyperquest(href);
-        hq.pipe(process.stdout);
+        if (params.color) {
+            var keys = [];
+            hq.pipe(split()).pipe(through(function (line) {
+                try { var msg = JSON.parse(line) }
+                catch (e) { return console.log(line) }
+                
+                if (keys.indexOf(msg[0]) < 0) keys.push(msg[0]);
+                var color = 31 + (keys.indexOf(msg[0]) % 6);
+                process.stdout.write(
+                    '\033[01;' + color + 'm[' + msg[0] + ']'
+                    + '\033[0m ' + msg[1]
+                );
+            }));
+        }
+        else {
+            hq.pipe(process.stdout);
+        }
         hq.on('error', function (err) {
             var msg = 'Error connecting to ' + remote + ': ' + err.message;
             console.error(msg);
