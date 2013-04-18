@@ -354,7 +354,12 @@ Ploy.prototype.handle = function (req, res) {
             || (params.prefix !== undefined && falsey(params.prefix))
                 ? through()
                 : through(function (line) {
-                    this.queue('[' + key + '] ' + line);
+                    if (params.format === 'json') {
+                        this.queue(JSON.stringify([ key, line ]) + '\n');
+                    }
+                    else {
+                        this.queue('[' + key + '] ' + line);
+                    }
                 })
             ;
             
