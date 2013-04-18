@@ -87,6 +87,11 @@ usage:
  
     Stream live updates when `-f` is set like `tail -f`.
     Slice log records for NAME directly with `-b` and `-e`.
+ 
+  ploy log { -n ROWS | -f | -b BEGIN | -e END | --color=true }
+
+    Show ROWS of log output for all branches.
+    Lines will be prefaced with a colored branch name when stdout is a tty.
 
   ploy mv SRC DST { -r REMOTE }
  
