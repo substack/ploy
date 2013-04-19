@@ -3,6 +3,7 @@ var cicada = require('cicada');
 var quotemeta = require('quotemeta');
 var mkdirp = require('mkdirp');
 var through = require('through');
+var split = require('split');
 
 var path = require('path');
 var fs = require('fs');
@@ -157,7 +158,9 @@ Ploy.prototype.deploy = function (commit) {
         if (self.logdir) {
             var file = path.join(self.logdir, name);
             var ws = fs.createWriteStream(file, { flags: 'a' });
-            stream.pipe(ws);
+            stream.pipe(split()).pipe(through(function (line) {
+                this.queue(Date.now() + ' ' + line + '\n');
+            })).pipe(ws);
         }
         self.emit('output', name, stream);
         
