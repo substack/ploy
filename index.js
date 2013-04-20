@@ -176,7 +176,7 @@ Ploy.prototype.deploy = function (commit) {
                     repo : commit.repo,
                     branch : commit.branch
                 };
-                stream.write(JSON.stringify(logMessage) + "\n");
+                stream.write(JSON.stringify(logMessage) + '\n');
             });
         });
     });
@@ -353,19 +353,25 @@ Ploy.prototype.handle = function (req, res) {
         function showLog (key) {
             var file = path.join(self.logdir, key);
             var sf = sliceFile(file);
-            var addPrefix = m[1]
-            || (params.prefix !== undefined && falsey(params.prefix))
-                ? through()
-                : through(function (buf) {
-                    var line = String(buf);
-                    if (params.format === 'json') {
-                        this.queue(JSON.stringify([ key, line ]) + '\n');
-                    }
-                    else {
-                        this.queue('[' + key + '] ' + line);
-                    }
-                })
-            ;
+            var isGrouped = m[1] || (
+                params.prefix !== undefined && falsey(params.prefix)
+            );
+            var write = function (buf) {
+                if (!isGrouped) return this.queue(buf);
+                
+                var line = String(buf);
+                var stamp = /(^\d+)\s+/.exec(line);
+                stamp = stamp && stamp[1];
+                var msg = line.replace(/^\d+\s+/, '');
+                
+                if (params.format === 'json') {
+                    this.queue(JSON.stringify([ key, stamp, msg ]) + '\n');
+                }
+                else {
+                    this.queue('[' + key + '] ' + msg);
+                }
+            };
+            var addPrefix = through(write);
             
             sf.on('error', function (err) { res.end(err + '\n') });
             res.on('close', function () { sf.close() });
