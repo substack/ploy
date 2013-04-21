@@ -111,17 +111,18 @@ else if (cmd === 'log' && argv._.length) {
             + '?' + qs.stringify(params)
         ;
         var hq = hyperquest(href);
-        if (params.color) {
+        if (params.format === 'json') {
             var keys = [];
             hq.pipe(split()).pipe(through(function (line) {
                 try { var msg = JSON.parse(line) }
                 catch (e) { return console.log(line) }
+                if (name) return process.stdout.write(msg[2]);
                 
                 if (keys.indexOf(msg[0]) < 0) keys.push(msg[0]);
                 var color = 31 + (keys.indexOf(msg[0]) % 6);
                 process.stdout.write(
                     '\033[01;' + color + 'm[' + msg[0] + ']'
-                    + '\033[0m ' + msg[1]
+                    + '\033[0m ' + msg[2]
                 );
             }));
         }

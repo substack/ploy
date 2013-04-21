@@ -4,6 +4,7 @@ var quotemeta = require('quotemeta');
 var mkdirp = require('mkdirp');
 var through = require('through');
 var split = require('split');
+var logdir = require('logdir');
 
 var path = require('path');
 var fs = require('fs');
@@ -12,7 +13,6 @@ var inherits = require('inherits');
 
 var qs = require('querystring');
 var url = require('url');
-var sliceFile = require('slice-file');
 
 var clone = require('clone');
 var spawn = require('child_process').spawn;
@@ -39,8 +39,10 @@ function Ploy (opts) {
     self.regexp = null;
     self._keys = {};
     self.workdir = opts.workdir;
-    self.logdir = opts.logdir;
-    if (opts.logdir) mkdirp(opts.logdir);
+    if (opts.logdir) {
+        mkdirp(opts.logdir);
+        self.logdir = logdir(opts.logdir);
+    }
     
     self.ci = cicada(opts);
     self.ci.on('commit', self.deploy.bind(self));
@@ -156,11 +158,7 @@ Ploy.prototype.deploy = function (commit) {
     
     procs.on('output', function (name, stream) {
         if (self.logdir) {
-            var file = path.join(self.logdir, name);
-            var ws = fs.createWriteStream(file, { flags: 'a' });
-            stream.pipe(split()).pipe(through(function (line) {
-                this.queue(Date.now() + ' ' + line + '\n');
-            })).pipe(ws);
+            stream.pipe(self.logdir.createWriteStream(name));
         }
         self.emit('output', name, stream);
         
@@ -339,7 +337,7 @@ Ploy.prototype.handle = function (req, res) {
         self.restart(name);
         res.end();
     }
-    else if (m = RegExp('^/_ploy/log(?:$|\\?|/([^?/]+))').exec(req.url)) {
+    else if (m = RegExp('^/_ploy/log(?:$|\\?)').exec(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
         var b = Number(params.begin);
         var e = Number(params.end);
@@ -347,38 +345,18 @@ Ploy.prototype.handle = function (req, res) {
         if (isNaN(e)) e = undefined;
         req.connection.setTimeout(0);
         
-        [].concat(m[1] || Object.keys(self.branches)).forEach(showLog);
-        self.on('add', showLog);
+        var ld = self.logdir.open(params.name);
+        res.on('close', function () { ld.close() });
         
-        function showLog (key) {
-            var file = path.join(self.logdir, key);
-            var sf = sliceFile(file);
-            var isGrouped = m[1] || (
-                params.prefix !== undefined && falsey(params.prefix)
-            );
-            var write = function (buf) {
-                if (!isGrouped) return this.queue(buf);
-                
-                var line = String(buf);
-                var stamp = /(^\d+)\s+/.exec(line);
-                stamp = stamp && stamp[1];
-                var msg = line.replace(/^\d+\s+/, '');
-                
-                if (params.format === 'json') {
-                    this.queue(JSON.stringify([ key, stamp, msg ]) + '\n');
-                }
-                else {
-                    this.queue('[' + key + '] ' + msg);
-                }
-            };
-            var addPrefix = through(write);
-            
-            sf.on('error', function (err) { res.end(err + '\n') });
-            res.on('close', function () { sf.close() });
-            if (falsey(params.follow)) {
-                sf.slice(b, e).pipe(addPrefix).pipe(res);
-            }
-            else sf.follow(b, e).pipe(addPrefix).pipe(res);
+        if (falsey(params.follow)) {
+            var s = ld.slice(b, e);
+            s.on('error', function (err) { res.end(err + '\n') });
+            s.pipe(res);
+        }
+        else {
+            var fw = ld.follow(b, e);
+            fw.on('error', function (err) { res.end(err + '\n') });
+            fw.pipe(res);
         }
     }
 };
