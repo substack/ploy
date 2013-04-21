@@ -74,7 +74,6 @@ else if (cmd === 'remove' || cmd === 'rm') {
 }
 else if (cmd === 'log' && argv._.length) {
     argv._.shift();
-    var name = argv.name || argv._.shift();
     
     getRemote(function (err, remote) {
         if (err) return error(err);
@@ -95,44 +94,45 @@ else if (cmd === 'log' && argv._.length) {
         }
         
         var params = { begin: begin, end: end, follow: follow };
-        if (!params.format && !name
-        && (process.stdout.isTTY || argv.color)
-        && String(argv.color) !== 'false') {
-            params.color = true;
+        var showColor = defined(argv.color, process.stdout.isTTY);
+        if (showColor === 'false') showColor = false;
+        
+        params.name = argv.name || (argv._.length ? argv._ : undefined);
+        if (Array.isArray(params.name) && params.name.length === 1) {
+            params.name = params.name[0];
         }
-        if (params.color && !params.format) params.format = 'json';
+        var multiMode = !params.name || Array.isArray(params.name);
         
         Object.keys(params).forEach(function (key) {
             if (params[key] === undefined) delete params[key];
         });
         
-        var href = remote + '/log'
-            + (name ? '/' + name : '')
-            + '?' + qs.stringify(params)
-        ;
+        var href = remote + '/log?' + qs.stringify(params);
         var hq = hyperquest(href);
-        if (params.format === 'json') {
-            var keys = [];
-            hq.pipe(split()).pipe(through(function (line) {
-                try { var msg = JSON.parse(line) }
-                catch (e) { return console.log(line) }
-                if (name) return process.stdout.write(msg[2]);
-                
-                if (keys.indexOf(msg[0]) < 0) keys.push(msg[0]);
-                var color = 31 + (keys.indexOf(msg[0]) % 6);
-                process.stdout.write(
-                    '\033[01;' + color + 'm[' + msg[0] + ']'
-                    + '\033[0m ' + msg[2]
-                );
-            }));
-        }
-        else {
-            hq.pipe(process.stdout);
-        }
         hq.on('error', function (err) {
             var msg = 'Error connecting to ' + remote + ': ' + err.message;
             console.error(msg);
         });
+        
+        var keys = [];
+        hq.pipe(split()).pipe(through(function (line) {
+            if (!multiMode) return this.queue(line.replace(/^\d+ /, '') + '\n');
+            
+            var m = /^(\S+)/.exec(line);
+            var branch = m && m[1];
+            var msg = line.replace(/^\S+ \d+ /, '');
+            
+            if (!showColor) return this.queue('[' + branch + '] ' + msg + '\n');
+            
+            if (keys.indexOf(branch) < 0) keys.push(branch);
+            
+            var color = 31 + (keys.indexOf(branch) % 6);
+            this.queue(
+                '\033[01;' + color + 'm[' + branch + ']'
+                + '\033[0m ' + msg + '\n'
+            );
+            
+        })).pipe(process.stdout);
     });
 }
 else if (true || cmd === 'server') {
