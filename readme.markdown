@@ -192,6 +192,13 @@ The `scripts.stop` keys work the same as the `scripts.start` keys:
 }
 ```
 
+## test
+
+If you specify a `scripts.test`, it will be run.
+
+If the test fails, code that you push will not be deployed and any old branches
+will continue to be run rather than be replaced.
+
 ## services
 
 You might want to manage non-http services with ploy.
