@@ -2,7 +2,7 @@
 
 var ploy = require('../');
 var argv = require('optimist')
-    .boolean([ 'q', 'quiet' ])
+    .boolean([ 'q', 'quiet', 'v', 'verbose' ])
     .argv
 ;
 var exec = require('child_process').exec;
@@ -27,7 +27,7 @@ if (cmd === 'help' || argv.h || argv.help || process.argv.length <= 2) {
     rs.pipe(process.stdout);
 }
 else if (cmd === 'list' || cmd === 'ls') {
-    showList();
+    showList(0, { verbose: argv.verbose || argv.v });
 }
 else if (cmd === 'move' || cmd === 'mv') {
     argv._.shift();
@@ -213,13 +213,16 @@ function getRemotes (cb) {
     });
 }
 
-function showList (indent) {
+function showList (indent, opts) {
     if (!indent) indent = 0;
+    if (!opts) opts = {};
     
     getRemote(function (err, remote) {
         if (err) return error(err);
         
-        var hq = hyperquest(remote + '/list');
+        var uri = remote + '/list';
+        if (opts.verbose) uri += '?format=branch,hash';
+        var hq = hyperquest(uri);
         hq.pipe(split()).pipe(through(function (line) {
             this.queue(Array(indent+1).join(' ') + line + '\n');
         })).pipe(process.stdout);

@@ -5,6 +5,7 @@ var mkdirp = require('mkdirp');
 var through = require('through');
 var split = require('split');
 var logdir = require('logdir');
+var table = require('text-table');
 
 var path = require('path');
 var fs = require('fs');
@@ -326,11 +327,16 @@ Ploy.prototype.handle = function (req, res) {
         self.remove(name);
         res.end();
     }
-    else if (RegExp('^/_ploy/list').test(req.url)) {
-        res.end(Object.keys(self.branches)
-            .map(function (s) { return s + '\n' })
-            .join('')
-        );
+    else if (RegExp('^/_ploy/list(\\?|$)').test(req.url)) {
+        var params = qs.parse((url.parse(req.url).search || '').slice(1));
+        var format = String(params.format || 'branch').split(',');
+        
+        res.end(table(Object.keys(self.branches).map(function (s) {
+            return format.map(function (key) {
+                if (key === 'branch') return s;
+                return self.branches[s][key] || 'undefined';
+            });
+        })) + '\n');
     }
     else if (RegExp('^/_ploy/restart/').test(req.url)) {
         var name = req.url.split('/')[3];
