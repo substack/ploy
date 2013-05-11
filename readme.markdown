@@ -76,9 +76,11 @@ usage:
     
     Type `ploy help ssl` to show ssl options.
  
-  ploy ls { -r REMOTE }
+  ploy ls { -r REMOTE | --verbose, -v | --format=FORMAT }
  
     List the running process branch names at REMOTE.
+    
+    Verbose formatting will use `branch,hash,repo,port`.
  
   ploy log NAME { -n ROWS | -f | -b BEGIN | -e END }
 
