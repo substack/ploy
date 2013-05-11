@@ -27,7 +27,10 @@ if (cmd === 'help' || argv.h || argv.help || process.argv.length <= 2) {
     rs.pipe(process.stdout);
 }
 else if (cmd === 'list' || cmd === 'ls') {
-    showList(0, { verbose: argv.verbose || argv.v });
+    showList(0, {
+        verbose: argv.verbose || argv.v,
+        format: argv.format
+    });
 }
 else if (cmd === 'move' || cmd === 'mv') {
     argv._.shift();
@@ -221,7 +224,9 @@ function showList (indent, opts) {
         if (err) return error(err);
         
         var uri = remote + '/list';
-        if (opts.verbose) uri += '?format=branch,hash';
+        if (opts.format) uri += '?format=' + opts.format
+        else if (opts.verbose) uri += '?format=branch,hash,repo,port'
+        
         var hq = hyperquest(uri);
         hq.pipe(split()).pipe(through(function (line) {
             this.queue(Array(indent+1).join(' ') + line + '\n');
