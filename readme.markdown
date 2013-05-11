@@ -227,7 +227,7 @@ work on your own. Consider registering your non-http services with
 
 Each script has these environment variables defined:
 
-* `$cOMMIT` - git hash of the current deploy
+* `$COMMIT` - git hash of the current deploy
 * `$BRANCH` - commit branch name, for example `"master"`
 * `$REPO` - repo name, for example `"repo.git"`
 
