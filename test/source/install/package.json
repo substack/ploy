@@ -5,6 +5,10 @@
     "preinstall": "./pre.sh",
     "install": "./install.sh",
     "postinstall": "./post.sh",
-    "start": "node server.js"
+    "prestart": "./pre_start.sh",
+    "poststart": "./post_start.sh",
+    "start": "node server.js",
+    "prestop": "./pre_stop.sh",
+    "poststop": "./post_stop.sh"
   }
 }

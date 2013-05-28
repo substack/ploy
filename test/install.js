@@ -47,7 +47,11 @@ test({ timeout: 90 * 1000 }, function (t) {
         push(port, 'master', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify(port, t, 'one\ntwo\nthree\n', 'local', deploy);
+                verify(
+                    port, t,
+                    'one\ntwo\nthree\nfour\nfive\nsix\nseven\n',
+                    'local', deploy
+                );
             }, 3000);
         });
     }
@@ -56,7 +60,11 @@ test({ timeout: 90 * 1000 }, function (t) {
         push(port, 'staging', function (code) {
             t.equal(code, 0);
             setTimeout(function () {
-                verify(port, t, 'one\ntwo\nthree\n', 'staging.local');
+                verify(
+                    port, t,
+                    'one\ntwo\nthree\nfour\nfive\nsix\nseven\n',
+                    'staging.local'
+                );
             }, 3000);
         });
     }
