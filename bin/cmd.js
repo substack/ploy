@@ -166,6 +166,7 @@ else if (true || cmd === 'server') {
         if (argv.key) sopts.key = fs.readFileSync(argv.key);
         if (argv.cert) sopts.cert = fs.readFileSync(argv.cert);
         if (argv.pfx) sopts.pfx = fs.readFileSync(argv.pfx);
+        sopts.honorCipherOrder = true;
         sopts.port = argv.sslPort || argv.s || 443;
         server.listen(sopts);
     }
