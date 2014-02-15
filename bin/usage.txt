@@ -22,13 +22,14 @@ usage:
   ploy work { -r REMOTE | --format=FORMAT }
 
     List the working directories from checked out git commits.
-    Directories with a branch listed are currently active.
     The default FORMAT is `repo,commit,time,branch`.
+ 
+    Active branches are shown with a trailing *.
 
   ploy clean
 
-    Remove unused working directories. These are the directories in `ploy work`
-    without a branch.
+    Remove unused working directories. These are the directories listed in
+    `ploy work` without a *.
 
   ploy log NAME { -n ROWS | -f | -b BEGIN | -e END }
 
