@@ -1,7 +1,7 @@
 usage:
 
   ploy server DIRECTORY PORT
-  ploy server { -d DIRECTORY | -p PORT | -a AUTHFILE }
+  ploy server { -d DIRECTORY | -p PORT | -a AUTHFILE | -f BOUNCER }
 
     Create a ploy http server, hosting repositories in DIRECTORY and listening
     on PORT for incoming connections.
@@ -10,6 +10,8 @@ usage:
     token strings to use for basic auth protection for ploy actions.
     
     Type `ploy help ssl` to show ssl options.
+    
+    You can specify a BOUNCER module with -f to use a custom http router.
  
   ploy ls { -r REMOTE | --verbose, -v | --format=FORMAT }
  

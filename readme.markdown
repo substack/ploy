@@ -64,7 +64,7 @@ previous server running under the same branch name will be killed.
 usage:
 
   ploy server DIRECTORY PORT
-  ploy server { -d DIRECTORY | -p PORT | -a AUTHFILE }
+  ploy server { -d DIRECTORY | -p PORT | -a AUTHFILE | -f BOUNCER }
 
     Create a ploy http server, hosting repositories in DIRECTORY and listening
     on PORT for incoming connections.
@@ -73,6 +73,8 @@ usage:
     token strings to use for basic auth protection for ploy actions.
     
     Type `ploy help ssl` to show ssl options.
+    
+    You can specify a BOUNCER module with -f to use a custom http router.
  
   ploy ls { -r REMOTE | --verbose, -v | --format=FORMAT }
  
@@ -251,6 +253,10 @@ instances.
 * opts.logdir - directory to store process stderr and stdout branch files
 * opts.auth - optional object mapping usernames to password token strings for
 basic auth
+* opts.bouncer - optional http router function. `opts.bouncer(req, res, bounce)`
+is called for each incoming request with a `bounce()` function from
+[bouncy](https://npmjs.org/package/bouncy). To defer back to ploy, just call
+`bounce()` with no arguments.
 
 If `opts` is a string, it will be used as the basedir for `opts.repodir` and
 `opts.workdir`.
