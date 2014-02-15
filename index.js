@@ -5,6 +5,8 @@ var mkdirp = require('mkdirp');
 var through = require('through');
 var split = require('split');
 var logdir = require('logdir');
+var subdir = require('subdir');
+var rmrf = require('rimraf');
 var table = require('text-table');
 
 var path = require('path');
@@ -346,7 +348,8 @@ Ploy.prototype.getWorking = function (cb) {
                         commit: r.split('.')[0],
                         time: Number(r.split('.')[1]),
                         branch: d && d.branch,
-                        pid: d && d.pid
+                        pid: d && d.pid,
+                        dir: path.join(self.workdir, r)
                     };
                 })
                 .sort(function (a, b) {
@@ -392,16 +395,42 @@ Ploy.prototype.handle = function (req, res) {
                 if (results.length) res.end('\n')
                 else res.end();
             });
-            return;
         }
-        
-        var format = String(params.format || 'branch').split(',');
-        res.end(table(Object.keys(self.branches).map(function (s) {
-            return format.map(function (key) {
-                if (key === 'branch') return s;
-                return self.branches[s][key] || 'undefined';
+        else {
+            var format = String(params.format || 'branch').split(',');
+            res.end(table(Object.keys(self.branches).map(function (s) {
+                return format.map(function (key) {
+                    if (key === 'branch') return s;
+                    return self.branches[s][key] || 'undefined';
+                });
+            })) + '\n');
+        }
+    }
+    else if (RegExp('^/_ploy/clean(\\?|$)').test(req.url)) {
+        self.getWorking(function (err, results) {
+            if (err) {
+                res.statusCode = 500;
+                res.end(err + '\n');
+                return;
+            }
+            var pending = results.length;
+            results.forEach(function (r) {
+                if (!r.branch && r.dir && subdir(self.workdir, r.dir)) {
+                    rmrf(r.dir, function (err) {
+                        if (err) {
+                            res.statusCode = 500;
+                            return res.end(
+                                'error removing ' + r.dir + ': ' + err + '\n'
+                            );
+                        }
+                        if (--pending === 0) done();
+                    });
+                }
+                else if (--pending === 0) done()
             });
-        })) + '\n');
+            
+            function done () { res.end() }
+        });
     }
     else if (RegExp('^/_ploy/restart/').test(req.url)) {
         var name = req.url.split('/')[3];

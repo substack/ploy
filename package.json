@@ -21,7 +21,9 @@
     "split": "~0.0.0",
     "inherits": "~1.0.0",
     "text-table": "~0.0.1",
-    "strftime": "~0.8.0"
+    "strftime": "~0.8.0",
+    "subdir": "0.0.3",
+    "rimraf": "~2.2.6"
   },
   "devDependencies": {
     "tap": "~0.4.0",

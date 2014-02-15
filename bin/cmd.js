@@ -37,6 +37,16 @@ else if (cmd === 'list' || cmd === 'ls') {
 else if (cmd === 'work') {
     showList(0, { type: 'work' });
 }
+else if (cmd === 'clean') {
+    getRemote(function (err, remote) {
+        var hq = hyperquest(remote + '/clean');
+        hq.pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
+    });
+}
 else if (cmd === 'move' || cmd === 'mv') {
     argv._.shift();
     var src = argv.src || argv._.shift();
