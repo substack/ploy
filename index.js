@@ -339,8 +339,30 @@ Ploy.prototype.handle = function (req, res) {
     }
     else if (RegExp('^/_ploy/list(\\?|$)').test(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
-        var format = String(params.format || 'branch').split(',');
+        if (params.type === 'work') {
+            fs.readdir(self.workdir, function (err, files) {
+                if (err) {
+                    res.statusCode = 500;
+                    return res.end(err + '\n');
+                }
+                
+                var results = [];
+                var pending = files.length;
+                files.forEach(function (file) {
+                    fs.stat(path.join(self.workdir, file), function (err, s) {
+                        if (s && s.isDirectory()) results.push(file);
+                        if (-- pending === 0) done();
+                    });
+                });
+                
+                function done () {
+                    res.end(results.join('\n') + (results.length ? '\n' : ''));
+                }
+            });
+            return;
+        }
         
+        var format = String(params.format || 'branch').split(',');
         res.end(table(Object.keys(self.branches).map(function (s) {
             return format.map(function (key) {
                 if (key === 'branch') return s;

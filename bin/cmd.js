@@ -29,7 +29,8 @@ if (cmd === 'help' || argv.h || argv.help || process.argv.length <= 2) {
 else if (cmd === 'list' || cmd === 'ls') {
     showList(0, {
         verbose: argv.verbose || argv.v,
-        format: argv.format
+        format: argv.format,
+        type: argv._[1] || 'branch'
     });
 }
 else if (cmd === 'move' || cmd === 'mv') {
@@ -229,9 +230,12 @@ function showList (indent, opts) {
     getRemote(function (err, remote) {
         if (err) return error(err);
         
-        var uri = remote + '/list';
-        if (opts.format) uri += '?format=' + opts.format
-        else if (opts.verbose) uri += '?format=branch,hash,repo,port'
+        var params = {};
+        if (opts.format) params.format = opts.format;
+        else if (opts.verbose) params.format = 'branch,hash,repo,port';
+        if (opts.type) params.type = opts.type;
+        
+        var uri = remote + '/list?' + qs.stringify(params);
         
         var hq = hyperquest(uri);
         hq.pipe(split()).pipe(through(function (line) {
