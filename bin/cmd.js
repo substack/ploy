@@ -245,16 +245,13 @@ function showList (indent, opts) {
         
         hq.pipe(split()).pipe(through(function (line) {
             if (params.type === 'work') {
-                var parts = line.split('.');
-                var results = {
-                    commit: parts[0],
-                    time: strftime('%F %T', new Date(Number(parts[1]))),
-                    unix: parts[1]
-                };
-                this.queue(String(params.format || 'commit,time')
+                var results = JSON.parse(line);
+                results.unix = results.time;
+                results.time = strftime('%F %T', new Date(results.time));
+                this.queue(String(params.format || 'commit,time,branch')
                     .split(',')
                     .map(function (key) { return results[key] })
-                    .join(' ')
+                    .join('  ')
                     + '\n'
                 );
             }

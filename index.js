@@ -217,6 +217,7 @@ Ploy.prototype.deploy = function (commit) {
             hash: commit.hash,
             repo: commit.repo,
             branch: commit.branch,
+            dir: commit.dir,
             key: ps.key,
             process: ps,
             kill: ps.killer
@@ -356,7 +357,26 @@ Ploy.prototype.handle = function (req, res) {
                 });
                 
                 function done () {
-                    res.end(results.join('\n') + (results.length ? '\n' : ''));
+                    var dirs = {};
+                    Object.keys(self.branches).forEach(function (key) {
+                        var d = self.branches[key];
+                        dirs[path.basename(d.dir)] = d;
+                    });
+                    res.write(
+                        results.map(function (r) {
+                            var d = dirs[r];
+                            return JSON.stringify({
+                                commit: r.split('.')[0],
+                                time: Number(r.split('.')[1]),
+                                branch: d && d.branch,
+                                pid: d && d.pid
+                            });
+                        })
+                        .join('\n')
+                    );
+                    
+                    if (results.length) res.end('\n');
+                    else res.end();
                 }
             });
             return;
