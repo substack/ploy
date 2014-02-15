@@ -344,57 +344,63 @@ Ploy.prototype.clean = function (cb) {
 
 Ploy.prototype.getWorking = function (cb) {
     var self = this;
+    var results = [];
+    
     fs.readdir(self.workdir, function (err, files) {
         if (err) return cb(err);
-        
-        var results = [];
-        var branches = {};
         var pending = files.length;
-        
         files.forEach(function (file) {
-            var head = path.join(self.workdir, file, '.git/FETCH_HEAD');
             fs.stat(path.join(self.workdir, file), function (err, s) {
                 if (s && s.isDirectory()) {
-                    results.push(file);
-                    ++ pending;
-                    fs.readFile(head, 'utf8', function (err, src) {
-                        var m = /\s{2,}branch '([^']+)' of ([^\r\n]+)/.exec(src);
-                        if (m) {
-                            var b = branches[file] = { branch: m[1] };
-                            b.repo = path.basename(m[2]);
-                            if (!/\.git$/.test(b.repo)) b.repo += '.git';
-                        }
-                        if (-- pending === 0) done();
+                    self.getCommit(file, function (err, commit) {
+                        if (commit) results.push(commit);
+                        if (--pending === 0) done();
                     });
                 }
-                if (-- pending === 0) done();
+                else if (--pending === 0) done();
             });
         });
-        
-        function done () {
-            var dirs = {};
-            Object.keys(self.branches).forEach(function (key) {
-                var d = self.branches[key];
-                dirs[path.basename(d.dir)] = d;
-            });
-            cb(null, results
-                .map(function (r) {
-                    var d = dirs[r], b = branches[r];
-                    return {
-                        commit: r.split('.')[0],
-                        time: Number(r.split('.')[1]),
-                        branch: b && b.branch,
-                        repo: b && b.repo,
-                        active: Boolean(d),
-                        pid: d && d.pid,
-                        dir: path.join(self.workdir, r)
-                    };
-                })
-                .sort(function (a, b) {
-                    return a.time < b.time ? -1 : 1;
-                })
-            );
+    });
+    
+    function done () {
+        var dirs = {};
+        Object.keys(self.branches).forEach(function (key) {
+            var d = self.branches[key];
+            dirs[d.dir] = d;
+        });
+        cb(null, results
+            .map(function (r) {
+                var d = dirs[r.dir];
+                r.active = Boolean(d);
+                r.pid = d && d.pid;
+                return r;
+            })
+            .sort(function (a, b) {
+                return a.time < b.time ? -1 : 1;
+            })
+        );
+    }
+};
+
+Ploy.prototype.getCommit = function (file, cb) {
+    var self = this;
+    var head = path.join(self.workdir, file, '.git/FETCH_HEAD');
+    var r = path.basename(file);
+    var commit = {
+        commit: r.split('.')[0],
+        time: Number(r.split('.')[1]),
+        dir: path.join(self.workdir, r)
+    };
+    
+    fs.readFile(head, 'utf8', function (err, src) {
+        if (err) return cb(err);
+        var m = /\s{2,}branch '([^']+)' of ([^\r\n]+)/.exec(src);
+        if (m) {
+            commit.branch = m[1];
+            commit.repo = path.basename(m[2]);
+            if (!/\.git$/.test(commit.repo)) commit.repo += '.git';
         }
+        cb(null, commit);
     });
 };
 
@@ -458,6 +464,9 @@ Ploy.prototype.handle = function (req, res) {
         var name = req.url.split('/')[3];
         self.restart(name);
         res.end();
+    }
+    else if (RegExp('^/_ploy/redeploy/').test(req.url)) {
+        
     }
     else if (m = RegExp('^/_ploy/log(?:$|\\?)').exec(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
