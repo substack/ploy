@@ -319,6 +319,44 @@ Ploy.prototype.close = function () {
     });
 };
 
+Ploy.prototype.getWorking = function (cb) {
+    var self = this;
+    fs.readdir(self.workdir, function (err, files) {
+        if (err) return cb(err);
+        
+        var results = [];
+        var pending = files.length;
+        files.forEach(function (file) {
+            fs.stat(path.join(self.workdir, file), function (err, s) {
+                if (s && s.isDirectory()) results.push(file);
+                if (-- pending === 0) done();
+            });
+        });
+        
+        function done () {
+            var dirs = {};
+            Object.keys(self.branches).forEach(function (key) {
+                var d = self.branches[key];
+                dirs[path.basename(d.dir)] = d;
+            });
+            cb(null, results
+                .map(function (r) {
+                    var d = dirs[r];
+                    return {
+                        commit: r.split('.')[0],
+                        time: Number(r.split('.')[1]),
+                        branch: d && d.branch,
+                        pid: d && d.pid
+                    };
+                })
+                .sort(function (a, b) {
+                    return a.time < b.time ? -1 : 1;
+                })
+            );
+        }
+    });
+};
+
 Ploy.prototype.handle = function (req, res) {
     var self = this;
     var m;
@@ -341,47 +379,18 @@ Ploy.prototype.handle = function (req, res) {
     else if (RegExp('^/_ploy/list(\\?|$)').test(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
         if (params.type === 'work') {
-            fs.readdir(self.workdir, function (err, files) {
+            self.getWorking(function (err, results) {
                 if (err) {
                     res.statusCode = 500;
-                    return res.end(err + '\n');
+                    res.end(err + '\n');
+                    return;
                 }
-                
-                var results = [];
-                var pending = files.length;
-                files.forEach(function (file) {
-                    fs.stat(path.join(self.workdir, file), function (err, s) {
-                        if (s && s.isDirectory()) results.push(file);
-                        if (-- pending === 0) done();
-                    });
-                });
-                
-                function done () {
-                    var dirs = {};
-                    Object.keys(self.branches).forEach(function (key) {
-                        var d = self.branches[key];
-                        dirs[path.basename(d.dir)] = d;
-                    });
-                    res.write(results
-                        .map(function (r) {
-                            var d = dirs[r];
-                            return {
-                                commit: r.split('.')[0],
-                                time: Number(r.split('.')[1]),
-                                branch: d && d.branch,
-                                pid: d && d.pid
-                            };
-                        })
-                        .sort(function (a, b) {
-                            return a.time < b.time ? -1 : 1;
-                        })
-                        .map(function (r) { return JSON.stringify(r) })
-                        .join('\n')
-                    );
-                    
-                    if (results.length) res.end('\n');
-                    else res.end();
-                }
+                res.write(results
+                    .map(function (r) { return JSON.stringify(r) })
+                    .join('\n')
+                );
+                if (results.length) res.end('\n')
+                else res.end();
             });
             return;
         }
