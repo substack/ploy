@@ -362,16 +362,20 @@ Ploy.prototype.handle = function (req, res) {
                         var d = self.branches[key];
                         dirs[path.basename(d.dir)] = d;
                     });
-                    res.write(
-                        results.map(function (r) {
+                    res.write(results
+                        .map(function (r) {
                             var d = dirs[r];
-                            return JSON.stringify({
+                            return {
                                 commit: r.split('.')[0],
                                 time: Number(r.split('.')[1]),
                                 branch: d && d.branch,
                                 pid: d && d.pid
-                            });
+                            };
                         })
+                        .sort(function (a, b) {
+                            return a.time < b.time ? -1 : 1;
+                        })
+                        .map(function (r) { return JSON.stringify(r) })
                         .join('\n')
                     );
                     
