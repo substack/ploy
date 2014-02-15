@@ -216,7 +216,7 @@ Ploy.prototype.deploy = function (commit) {
     
     function addServer (name, ps) {
         if (self.branches[name]) {
-            self.remove(name);
+            self.remove(name, { keepBranch: true });
         }
         self.add(name, {
             port: ps.port,
@@ -284,7 +284,8 @@ Ploy.prototype._rescanRegExp = function () {
     );
 };
 
-Ploy.prototype.remove = function (name) {
+Ploy.prototype.remove = function (name, opts) {
+    if (!opts) opts = {};
     var b = this.branches[name];
     if (b) {
         b.kill();
@@ -293,9 +294,11 @@ Ploy.prototype.remove = function (name) {
     delete this.branches[name];
     this._rescanRegExp();
     
-    spawn('git', [ 'branch', '-D', name ], {
-        cwd: path.join(this.ci.repodir, b.repo)
-    });
+    if (opts.keepBranch !== true) {
+        spawn('git', [ 'branch', '-D', name ], {
+            cwd: path.join(this.ci.repodir, b.repo)
+        });
+    }
 };
 
 Ploy.prototype.restart = function (name) {
