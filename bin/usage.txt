@@ -23,7 +23,7 @@ usage:
 
     List the working directories from checked out git commits.
     Directories with a branch listed are currently active.
-    The default FORMAT is `commit,time,branch`.
+    The default FORMAT is `repo,commit,time,branch`.
 
   ploy clean
 

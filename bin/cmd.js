@@ -253,15 +253,16 @@ function showList (indent, opts) {
         if (opts.type) params.type = opts.type;
         
         var uri = remote + '/list?' + qs.stringify(params);
-        
         var hq = hyperquest(uri);
         
         hq.pipe(split()).pipe(through(function (line) {
             if (params.type === 'work') {
+                var fmt = params.format || 'repo,commit,time,branch';
                 var results = JSON.parse(line);
                 results.unix = results.time;
                 results.time = strftime('%F %T', new Date(results.time));
-                this.queue(String(params.format || 'commit,time,branch')
+                if (results.active) results.branch += '*';
+                this.queue(String(fmt)
                     .split(',')
                     .map(function (key) { return results[key] })
                     .join('  ')

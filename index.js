@@ -327,7 +327,7 @@ Ploy.prototype.clean = function (cb) {
         if (err) return cb(err);
         var pending = results.length;
         results.forEach(function (r) {
-            if (!r.branch && r.dir && subdir(self.workdir, r.dir)) {
+            if (!r.active && r.dir && subdir(self.workdir, r.dir)) {
                 rmrf(r.dir, function (err) {
                     if (err) cb(new Error(
                         'error removing ' + r.dir + ': ' + err + '\n'
@@ -348,10 +348,25 @@ Ploy.prototype.getWorking = function (cb) {
         if (err) return cb(err);
         
         var results = [];
+        var branches = {};
         var pending = files.length;
+        
         files.forEach(function (file) {
+            var head = path.join(self.workdir, file, '.git/FETCH_HEAD');
             fs.stat(path.join(self.workdir, file), function (err, s) {
-                if (s && s.isDirectory()) results.push(file);
+                if (s && s.isDirectory()) {
+                    results.push(file);
+                    ++ pending;
+                    fs.readFile(head, 'utf8', function (err, src) {
+                        var m = /\s{2,}branch '([^']+)' of ([^\r\n]+)/.exec(src);
+                        if (m) {
+                            var b = branches[file] = { branch: m[1] };
+                            b.repo = path.basename(m[2]);
+                            if (!/\.git$/.test(b.repo)) b.repo += '.git';
+                        }
+                        if (-- pending === 0) done();
+                    });
+                }
                 if (-- pending === 0) done();
             });
         });
@@ -364,11 +379,13 @@ Ploy.prototype.getWorking = function (cb) {
             });
             cb(null, results
                 .map(function (r) {
-                    var d = dirs[r];
+                    var d = dirs[r], b = branches[r];
                     return {
                         commit: r.split('.')[0],
                         time: Number(r.split('.')[1]),
-                        branch: d && d.branch,
+                        branch: b && b.branch,
+                        repo: b && b.repo,
+                        active: Boolean(d),
                         pid: d && d.pid,
                         dir: path.join(self.workdir, r)
                     };
