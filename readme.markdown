@@ -303,6 +303,21 @@ Restart the process at the branch `name`.
 Move the process at branch name `src` to `dst`, killing the branch process at
 `src` if it was running.
 
+## server.getWorking(cb)
+
+Gather an array of the working directories in `cb(err, working)`. Each `w` item in
+the `working` array has:
+
+* w.commit - the commit hash of the checked out working directory
+* w.time - the unix timestamp of when the commit was sent
+* w.branch - the branch name that was deployed. undefined if inactive.
+* w.pid - the process id. undefined if inactive.
+* w.dir - the working directory
+
+## server.clean(cb)
+
+Remove inactive working directories.
+
 # events
 
 ## server.on('spawn', function (ps, info) {})
