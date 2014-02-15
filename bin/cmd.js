@@ -11,6 +11,7 @@ var defined = require('defined');
 var qs = require('querystring');
 var split = require('split');
 var through = require('through');
+var strftime = require('strftime');
 
 var fs = require('fs');
 var path = require('path');
@@ -30,8 +31,11 @@ else if (cmd === 'list' || cmd === 'ls') {
     showList(0, {
         verbose: argv.verbose || argv.v,
         format: argv.format,
-        type: argv._[1] || 'branch'
+        type: 'branch'
     });
+}
+else if (cmd === 'work') {
+    showList(0, { type: 'work' });
 }
 else if (cmd === 'move' || cmd === 'mv') {
     argv._.shift();
@@ -238,9 +242,27 @@ function showList (indent, opts) {
         var uri = remote + '/list?' + qs.stringify(params);
         
         var hq = hyperquest(uri);
+        
         hq.pipe(split()).pipe(through(function (line) {
-            this.queue(Array(indent+1).join(' ') + line + '\n');
+            if (params.type === 'work') {
+                var parts = line.split('.');
+                var results = {
+                    commit: parts[0],
+                    time: strftime('%F %T', new Date(Number(parts[1]))),
+                    unix: parts[1]
+                };
+                this.queue(String(params.format || 'commit,time')
+                    .split(',')
+                    .map(function (key) { return results[key] })
+                    .join(' ')
+                    + '\n'
+                );
+            }
+            else {
+                this.queue(Array(indent+1).join(' ') + line + '\n');
+            }
         })).pipe(process.stdout);
+        
         hq.on('error', function (err) {
             var msg = 'Error connecting to ' + remote + ': ' + err.message;
             console.error(msg);
