@@ -164,6 +164,7 @@ Ploy.prototype.deploy = function (commit) {
     var env = clone(process.env);
     var procs = spawnProcess(commit, env);
     procs.on('error', function (err) { console.error(err) });
+    if (!commit.seq) commit.seq = 0;
     
     procs.on('spawn', function (ps, sp) {
         self.emit('spawn', ps, sp);
@@ -210,6 +211,9 @@ Ploy.prototype.deploy = function (commit) {
         addServer(name, ps);
     });
     
+    var seq = commit.seq;
+    return procs;
+    
     function addServer (name, ps) {
         if (self.branches[name]) {
             self.remove(name);
@@ -219,18 +223,30 @@ Ploy.prototype.deploy = function (commit) {
             hash: commit.hash,
             repo: commit.repo,
             branch: commit.branch,
+            commit: commit,
             dir: commit.dir,
             key: ps.key,
             process: ps,
-            kill: ps.killer
+            kill: ps.killer,
+            procs: procs
         });
         
         ps.once('exit', function (code) {
             var b = self.branches[name];
-            if (b && b.hash === commit.hash) ps.respawn();
+            if (b && b.hash === commit.hash && b.commit.seq === seq) {
+                ps.respawn();
+            }
         });
     }
-    
+};
+
+Ploy.prototype.redeploy = function (branch, cb) {
+    var b = this.branches[branch];
+    b.commit.seq ++;
+    b.process.kill();
+    this.deploy(b.commit).on('start', function () {
+        cb();
+    });
 };
 
 Ploy.prototype.add = function (name, rec) {
@@ -466,7 +482,14 @@ Ploy.prototype.handle = function (req, res) {
         res.end();
     }
     else if (RegExp('^/_ploy/redeploy/').test(req.url)) {
-        
+        var name = req.url.split('/')[3];
+        self.redeploy(name, function (err) {
+            if (err) {
+                res.statusCode = 500;
+                res.end(err + '\n');
+            }
+            res.end();
+        });
     }
     else if (m = RegExp('^/_ploy/log(?:$|\\?)').exec(req.url)) {
         var params = qs.parse((url.parse(req.url).search || '').slice(1));
