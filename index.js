@@ -321,6 +321,27 @@ Ploy.prototype.close = function () {
     });
 };
 
+Ploy.prototype.clean = function (cb) {
+    var self = this;
+    self.getWorking(function (err, results) {
+        if (err) return cb(err);
+        var pending = results.length;
+        results.forEach(function (r) {
+            if (!r.branch && r.dir && subdir(self.workdir, r.dir)) {
+                rmrf(r.dir, function (err) {
+                    if (err) cb(new Error(
+                        'error removing ' + r.dir + ': ' + err + '\n'
+                    ));
+                    else if (--pending === 0) done();
+                });
+            }
+            else if (--pending === 0) done()
+        });
+        
+        function done () { cb() }
+    });
+};
+
 Ploy.prototype.getWorking = function (cb) {
     var self = this;
     fs.readdir(self.workdir, function (err, files) {
@@ -407,29 +428,13 @@ Ploy.prototype.handle = function (req, res) {
         }
     }
     else if (RegExp('^/_ploy/clean(\\?|$)').test(req.url)) {
-        self.getWorking(function (err, results) {
+        self.clean(function (err) {
             if (err) {
                 res.statusCode = 500;
                 res.end(err + '\n');
                 return;
             }
-            var pending = results.length;
-            results.forEach(function (r) {
-                if (!r.branch && r.dir && subdir(self.workdir, r.dir)) {
-                    rmrf(r.dir, function (err) {
-                        if (err) {
-                            res.statusCode = 500;
-                            return res.end(
-                                'error removing ' + r.dir + ': ' + err + '\n'
-                            );
-                        }
-                        if (--pending === 0) done();
-                    });
-                }
-                else if (--pending === 0) done()
-            });
-            
-            function done () { res.end() }
+            else res.end();
         });
     }
     else if (RegExp('^/_ploy/restart/').test(req.url)) {
