@@ -19,6 +19,17 @@ usage:
     
     Verbose formatting will use `branch,hash,repo,port`.
  
+  ploy work { -r REMOTE | --format=FORMAT }
+
+    List the working directories from checked out git commits.
+    Directories with a branch listed are currently active.
+    The default FORMAT is `commit,time,branch`.
+
+  ploy clean
+
+    Remove unused working directories. These are the directories in `ploy work`
+    without a branch.
+
   ploy log NAME { -n ROWS | -f | -b BEGIN | -e END }
 
     Show ROWS of log output for the branch NAME like `tail`.

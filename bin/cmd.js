@@ -35,7 +35,10 @@ else if (cmd === 'list' || cmd === 'ls') {
     });
 }
 else if (cmd === 'work') {
-    showList(0, { type: 'work' });
+    showList(0, {
+        format: argv.format,
+        type: 'work'
+    });
 }
 else if (cmd === 'clean') {
     getRemote(function (err, remote) {
