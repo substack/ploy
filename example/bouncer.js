@@ -5,7 +5,7 @@ module.exports = function (req, res, bounce) {
             var hostname = req.headers.host.split(':')[0];
             var host = hostname + ':' + this.bouncers[i].address().port;
             
-            res.statusCode = 303;
+            res.statusCode = 302;
             res.setHeader('location', 'https://' + host + req.url);
             return res.end();
         }

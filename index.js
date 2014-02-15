@@ -55,7 +55,17 @@ function Ploy (opts) {
 
 Ploy.prototype.createBouncer = function (opts) {
     var self = this;
-    return bouncy(opts, function (req, res, bounce) {
+    if (opts.bouncer) {
+        return bouncy(opts, function (req, res, bounce) {
+            opts.bouncer.call(self, req, res, function (x) {
+                if (x === undefined) onbounce(req, res, bounce);
+                else bounce.apply(this, arguments);
+            });
+        });
+    }
+    else return bouncy(opts, onbounce);
+    
+    function onbounce (req, res, bounce) {
         var host = (req.headers.host || '').split(':')[0];
         var parts = host.split('.');
         var subdomain;
@@ -95,7 +105,7 @@ Ploy.prototype.createBouncer = function (opts) {
             res.setHeader('connection', 'close');
             res.end(msg + '\n');
         }
-    });
+    }
 };
 
 Ploy.prototype.restore = function () {

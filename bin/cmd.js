@@ -158,10 +158,15 @@ else if (true || cmd === 'server') {
             ps.stderr.pipe(process.stderr, { end: false });
         });
     }
-    server.listen(argv.port || argv.p || 80);
+    var opts = {};
+    if (argv.f) {
+        try { opts.bouncer = require(argv.f) }
+        catch (e) { opts.bouncer = require(path.resolve(argv.f)) }
+    }
+    server.listen(argv.port || argv.p || 80, opts);
     
-    if (argv.ca || argv.pfx) {
-        var sopts = {};
+    if (argv.cert || argv.ca || argv.pfx) {
+        var sopts = { bouncer: opts.bouncer };
         if (argv.ca) sopts.ca = fs.readFileSync(argv.ca);
         if (argv.key) sopts.key = fs.readFileSync(argv.key);
         if (argv.cert) sopts.cert = fs.readFileSync(argv.cert);
