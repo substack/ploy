@@ -54,9 +54,13 @@ test({ timeout: 90 * 1000 }, function (t) {
     });
     
     function push0 () {
+        server.once('start', function () {
+            setTimeout(function () {
+                verify(port, t, 'beep boop\n', 'local', deploy);
+            }, 3000);
+        });
         push(port, 'master', function (code) {
             t.equal(code, 0);
-            verify(port, t, 'beep boop\n', 'local', deploy);
         });
     }
     

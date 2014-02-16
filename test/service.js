@@ -47,10 +47,11 @@ test({ timeout: 90 * 1000 }, function (t) {
     function push0 () {
         push(port, 'master', function (code) {
             t.equal(code, 0);
+        });
+        server.once('start', function () {
             var next = pending(2, function () {
                 setTimeout(checkPort, 2000);
             });
-            
             setTimeout(function () {
                 verify(port, t, 'BEEP\n', 'beep.local', next);
                 verify(port, t, 'host not found\n', '_boop.local', next);
