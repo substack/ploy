@@ -46,6 +46,8 @@ test({ timeout: 90 * 1000 }, function (t) {
     function push0 () {
         push(port, 'master', function (code) {
             t.equal(code, 0);
+        });
+        server.once('start', function () {
             setTimeout(function () {
                 verify(
                     port, t,
@@ -59,6 +61,8 @@ test({ timeout: 90 * 1000 }, function (t) {
     function push1 () {
         push(port, 'staging', function (code) {
             t.equal(code, 0);
+        });
+        server.once('start', function () {
             setTimeout(function () {
                 verify(
                     port, t,
