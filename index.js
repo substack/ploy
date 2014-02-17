@@ -287,6 +287,7 @@ Ploy.prototype._rescanRegExp = function () {
 Ploy.prototype.remove = function (name, opts) {
     if (!opts) opts = {};
     var self = this;
+    if (!this.branches[name]) return;
     
     var forGit = {
         repo : this.branches[name].repo,
