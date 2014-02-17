@@ -286,17 +286,37 @@ Ploy.prototype._rescanRegExp = function () {
 
 Ploy.prototype.remove = function (name, opts) {
     if (!opts) opts = {};
-    var b = this.branches[name];
-    if (b) {
-        b.kill();
-        this.emit('remove', name, b);
-    }
-    delete this.branches[name];
-    this._rescanRegExp();
-    
+    var self = this;
+
+    var forGit = {
+        repo : this.branches[name].repo,
+        branch : this.branches[name].branch
+    };
+
+    var allBranches =
+        Object.keys(this.branches).reduce(function (acc, branchName) {
+            if (self.branches[name].repo === self.branches[branchName].repo &&
+                self.branches[name].dir === self.branches[branchName].dir &&
+                self.branches[name].branch === self.branches[branchName].branch)
+            {  
+                acc.push(branchName);
+            }
+            return acc;
+        }, []);
+
+    allBranches.forEach(function (branchName) {
+        var b = self.branches[branchName];
+        if (b) {
+            b.kill();
+            self.emit('remove', branchName, b);
+        }
+        delete self.branches[branchName];
+        self._rescanRegExp();
+    });
+
     if (opts.keepBranch !== true) {
-        spawn('git', [ 'branch', '-D', name ], {
-            cwd: path.join(this.ci.repodir, b.repo)
+        spawn('git', [ 'branch', '-D', forGit.branch ], {
+            cwd: path.join(this.ci.repodir, forGit.repo)
         });
     }
 };
