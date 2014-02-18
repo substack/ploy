@@ -59,7 +59,10 @@ Ploy.prototype.createBouncer = function (opts) {
     var self = this;
     if (opts.bouncer) {
         return bouncy(opts, function (req, res, bounce) {
-            opts.bouncer.call(self, req, res, function (x) {
+            if (/^\/_ploy\b/.test(req.url)) {
+                onbounce(req, res, bounce);
+            }
+            else opts.bouncer.call(self, req, res, function (x) {
                 if (x === undefined) onbounce(req, res, bounce);
                 else bounce.apply(this, arguments);
             });
