@@ -12,6 +12,7 @@ var qs = require('querystring');
 var split = require('split');
 var through = require('through');
 var strftime = require('strftime');
+var unbundle = require('cert-unbundle');
 
 var fs = require('fs');
 var path = require('path');
@@ -198,7 +199,7 @@ else if (true || cmd === 'server') {
     
     if (argv.cert || argv.ca || argv.pfx) {
         var sopts = { bouncer: opts.bouncer };
-        if (argv.ca) sopts.ca = fs.readFileSync(argv.ca);
+        if (argv.ca) sopts.ca = unbundle(fs.readFileSync(argv.ca, 'utf8'));
         if (argv.key) sopts.key = fs.readFileSync(argv.key);
         if (argv.cert) sopts.cert = fs.readFileSync(argv.cert);
         if (argv.pfx) sopts.pfx = fs.readFileSync(argv.pfx);
