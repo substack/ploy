@@ -1,6 +1,6 @@
 {
   "name": "ploy",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "git push deploy http router, hosting branches on subdomains",
   "bin": {
     "ploy": "bin/cmd.js"
@@ -24,6 +24,7 @@
     "strftime": "~0.8.0",
     "subdir": "~0.0.3",
     "text-table": "~0.0.1",
+    "through": "^2.3.4",
     "through2": "^0.4.1"
   },
   "devDependencies": {
