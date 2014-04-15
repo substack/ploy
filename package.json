@@ -20,11 +20,11 @@
     "quotemeta": "~0.0.0",
     "rimraf": "~2.2.6",
     "shell-quote": "~0.1.0",
-    "split": "~0.0.0",
+    "split": "^0.0.0",
     "strftime": "~0.8.0",
     "subdir": "~0.0.3",
     "text-table": "~0.0.1",
-    "through": "~2.2.7"
+    "through2": "^0.4.1"
   },
   "devDependencies": {
     "tap": "~0.4.0",
