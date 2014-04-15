@@ -249,6 +249,11 @@ Each script has these environment variables defined:
 * `$BRANCH` - commit branch name, for example `"master"`
 * `$REPO` - repo name, for example `"repo.git"`
 
+* `$PREV` - the last previous working directory, if any
+* `$PREV_COMMIT` - git hash of the previous deploy, if any
+* `$PREV_BRANCH` - commit branch name of the previous deploy for the current
+`$REPO`, if any
+
 Additionally, `$PATH` is prepended with `node_modules/.bin` so that bin scripts
 installed with npm will be available for install scripts.
 

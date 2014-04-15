@@ -58,7 +58,6 @@ test({ timeout: 90 * 1000 }, function (t) {
     
     function push1 () {
         server.once('spawn', function (ps, sp) {
-            console.error('PREV=', sp.commit);
             t.ok(sp.commit.prev.dir);
             setTimeout(function () {
                 verify(port, t, sp.commit.prev.dir + '\n', 'local');
