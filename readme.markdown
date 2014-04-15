@@ -241,6 +241,27 @@ need to figure out how you want multiple services running on the same box to
 work on your own. Consider registering your non-http services with
 [seaport](https://github.com/substack/seaport).
 
+## preinstall
+
+One handy trick you can do to make deploys much faster and more resilient
+against npm outages is to include a `scripts.preinstall` to copy over the
+node_modules directory from the previous build. This avoids a ton of extra
+network traffic and costly recompilation.
+
+Here's an example `scripts.preinstall`:
+
+```
+{
+  "dependencies": {
+    "level": "^0.18.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "preinstall": "(cp -r $PREV/node_modules .; exit 0)"
+  }
+}
+```
+
 # environment
 
 Each script has these environment variables defined:
