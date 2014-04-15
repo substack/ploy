@@ -28,7 +28,11 @@ function teardown (t) {
     });
 }
 
-var tmpDir = '/tmp/ploy-test/' + Math.random();
+var os = require('os');
+var mkdirp = require('mkdirp');
+var tmpDir = path.join(os.tmpdir(), 'ploy-test', ''+Math.random());
+mkdirp.sync(tmpDir);
+
 var server = ploy(tmpDir);
 var port;
 
