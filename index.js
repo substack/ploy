@@ -2,7 +2,7 @@ var bouncy = require('bouncy');
 var cicada = require('cicada');
 var quotemeta = require('quotemeta');
 var mkdirp = require('mkdirp');
-var through = require('through');
+var through = require('through2');
 var split = require('split');
 var logdir = require('logdir');
 var subdir = require('subdir');
@@ -434,6 +434,25 @@ Ploy.prototype.getCommit = function (file, cb) {
         dir: path.join(self.workdir, r)
     };
     
+    var ps = spawn('git', [ 'log', '--format=%H' ]);
+    var lineNum = 0;
+    var pending = 3;
+    ps.stdout.pipe(split()).pipe(through2(write, done));
+    
+    function write (line, enc, next) {
+        if (++ lineNum === 2) {
+            commit.prev = { commit: line.trim() };
+            ps.kill();
+        }
+        else next();
+    }
+    
+    fs.readdir(self.workdir, function (err, files) {
+        if (err) return cb(err);
+        dirs = files
+        done();
+    });
+    
     fs.readFile(head, 'utf8', function (err, src) {
         if (err) return cb(err);
         var m = /\s{2,}branch '([^']+)' of ([^\r\n]+)/.exec(src);
@@ -442,8 +461,29 @@ Ploy.prototype.getCommit = function (file, cb) {
             commit.repo = path.basename(m[2]);
             if (!/\.git$/.test(commit.repo)) commit.repo += '.git';
         }
-        cb(null, commit);
+        done();
     });
+    
+    function done () {
+        if (--pending !== 0) return;
+        if (commit.prev) {
+            var d = dirs.filter(function (dir) {
+                return dir.split('.')[0] === commit.prev.commit;
+            }).sort(cmp)[0];
+            if (d) {
+                commit.prev.dir = path.join(self.workdir, d);
+                commit.prev.time = Number(d.split('.')[1]);
+            }
+        }
+        
+        cb(null, commit);
+        
+        function cmp (a, b) {
+            var at = Number(a.split('.')[1]);
+            var bt = Number(b.split('.')[1]);
+            return at < bt ? -1 : 1;
+        }
+    }
 };
 
 Ploy.prototype.handle = function (req, res) {
