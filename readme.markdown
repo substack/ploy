@@ -361,7 +361,8 @@ Re-run the deploy scripts for `name` at the current commit hash.
 ## server.on('spawn', function (ps, info) {})
 
 When a process is created from `npm install` or one of the package.json start
-scripts, this event fires with the `info.commit` and `info.command` executed.
+scripts, this event fires with the `info.commit` and `info.command` executed
+under the `info.env` environment object.
 
 ## server.on('output', function (name, stream) {})
 
