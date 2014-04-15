@@ -42,15 +42,16 @@ var port;
 
 test(setup);
 test({ timeout: 90 * 1000 }, function (t) {
-    t.plan(7);
+    t.plan(8);
     server.listen(function () {
         port = server.address().port;
         setTimeout(push0, 2000);
     });
     
     server.on('spawn', function (ps, sp) {
-        if (sp.command[0] === './kill.sh') {
-            t.ok(/^\d+$/.test(sp.command[1]));
+        if (/kill\.sh/.test(sp.command)) {
+            t.equal(sp.command, './kill.sh $PID');
+            t.ok(/^\d+$/.test(sp.env.PID));
             ps.stdout.pipe(concat(function (err, data) {
                 t.ok(/killer killing/.test(data), 'kill script');
             }));
@@ -81,5 +82,9 @@ test({ timeout: 90 * 1000 }, function (t) {
             push1();
         });
     }
+    
+    t.on('end', function () {
+        console.log('FINISHED!');
+    });
 });
 test(teardown);
