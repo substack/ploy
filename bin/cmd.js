@@ -80,6 +80,34 @@ else if (cmd === 'restart') {
         });
     });
 }
+else if (cmd === 'stop') {
+    argv._.shift();
+    var name = argv.name || argv._.shift();
+    getRemote(function (err, remote) {
+        if (err) return error(err);
+
+        var hq = hyperquest(remote + '/stop/' + name);
+        hq.pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
+    });
+}
+else if (cmd === 'start') {
+    argv._.shift();
+    var name = argv.name || argv._.shift();
+    getRemote(function (err, remote) {
+        if (err) return error(err);
+
+        var hq = hyperquest(remote + '/start/' + name);
+        hq.pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
+    });
+}
 else if (cmd === 'redeploy') {
     argv._.shift();
     var branch = argv.branch || argv._[0];

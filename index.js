@@ -237,7 +237,7 @@ Ploy.prototype.deploy = function (commit) {
         ps.once('exit', function (code) {
             var b = self.branches[name];
             if (b && b.hash === commit.hash && b.commit.seq === seq) {
-                ps.respawn();
+                if (b.stopped !== true) ps.respawn();
             }
         });
     }
@@ -327,6 +327,22 @@ Ploy.prototype.remove = function (name, opts) {
 Ploy.prototype.restart = function (name) {
     var b = this.branches[name];
     if (b) b.kill();
+};
+
+Ploy.prototype.stop = function (name) {
+    var b = this.branches[name];
+    if (b && b.stopped !== true) {
+        b.stopped = true;
+        b.kill();
+    }
+};
+
+Ploy.prototype.start = function (name) {
+    var b = this.branches[name];
+    if (b && b.stopped === true) {
+        b.stopped = false;
+        this.deploy(b.commit);
+    }
 };
 
 Ploy.prototype.move = function (src, dst) {
@@ -505,6 +521,16 @@ Ploy.prototype.handle = function (req, res) {
     else if (RegExp('^/_ploy/restart/').test(req.url)) {
         var name = req.url.split('/')[3];
         self.restart(name);
+        res.end();
+    }
+    else if (RegExp('^/_ploy/stop/').test(req.url)) {
+        var name = req.url.split('/')[3];
+        self.stop(name);
+        res.end();
+    }
+    else if (RegExp('^/_ploy/start/').test(req.url)) {
+        var name = req.url.split('/')[3];
+        self.start(name);
         res.end();
     }
     else if (RegExp('^/_ploy/redeploy/').test(req.url)) {
