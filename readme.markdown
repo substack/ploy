@@ -120,7 +120,11 @@ usage:
   ploy restart NAME { -r REMOTE }
  
     Restart the process at NAME.
-
+ 
+  ploy stop NAME { -r REMOTE }
+ 
+    Stop the process at NAME.
+ 
   ploy redeploy NAME { -r REMOTE }
  
     Redeploy the process at NAME, re-running install and test scripts.
