@@ -7,7 +7,7 @@ git push at this http router and it will host your branches on subdomains
 think [bouncy](https://github.com/substack/bouncy) +
 [cicada](https://github.com/substack/cicada)
 
-![ploy](http://substack.net/images/ploy.png);
+![ploy](http://substack.net/images/ploy.png)
 
 # example
 
