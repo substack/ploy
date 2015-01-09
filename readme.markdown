@@ -305,6 +305,7 @@ basic auth
 is called for each incoming request with a `bounce()` function from
 [bouncy](https://npmjs.org/package/bouncy). To defer back to ploy, just call
 `bounce()` with no arguments.
+* opts.skipTest - skip running `scripts.test` if true
 
 If `opts` is a string, it will be used as the basedir for `opts.repodir` and
 `opts.workdir`.

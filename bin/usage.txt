@@ -78,3 +78,8 @@ OPTIONS
   is exactly one ploy remote in set up as a git remote, it will be used by
   default.
 
+  For `ploy server`:
+
+    --skip-test
+      Skip running tests before starting the service.
+

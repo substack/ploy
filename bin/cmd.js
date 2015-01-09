@@ -2,7 +2,7 @@
 
 var ploy = require('../');
 var argv = require('optimist')
-    .boolean([ 'q', 'quiet', 'v', 'verbose' ])
+    .boolean([ 'q', 'quiet', 'v', 'verbose', 'skip-test' ])
     .argv
 ;
 var exec = require('child_process').exec;
@@ -210,6 +210,7 @@ else if (true || cmd === 'server') {
         logdir: path.join(dir, 'log'),
         auth: authFile && JSON.parse(fs.readFileSync(authFile))
     };
+    if (argv["skip-test"]) opts.skipTest = true;
     
     var server = ploy(opts);
     if (!argv.q && !argv.quiet) {
