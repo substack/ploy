@@ -52,6 +52,7 @@ function Ploy (opts) {
     
     self.bouncers = [];
     self.auth = opts.auth;
+    self.opts = opts;
     self.restore();
 }
 
@@ -165,7 +166,7 @@ Ploy.prototype.deploy = function (commit) {
     var self = this;
     
     var env = clone(process.env);
-    var procs = spawnProcess(commit, env);
+    var procs = spawnProcess(commit, env, this.opts);
     procs.on('error', function (err) { console.error(err) });
     if (!commit.seq) commit.seq = 0;
     
