@@ -97,7 +97,14 @@ Ploy.prototype.createBouncer = function (opts) {
             self.handle(req, res);
         }
         else if (!/^_/.test(branch) && self.branches[branch]) {
-            bounce(self.branches[branch]);
+            var proto = req.connection.encrypted ? 'https' : 'http';
+            var opts = {
+                headers: {
+                    'X-Forwarded-For': req.connection.remoteAddress,
+                    'X-Forwarded-Proto': proto
+                }
+            };
+            bounce(self.branches[branch], opts);
         }
         else {
             res.statusCode = 404;
